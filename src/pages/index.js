@@ -1,30 +1,57 @@
-import clsx from 'clsx';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import { useEffect, useState } from 'react';
 import Layout from '@theme/Layout';
-import Heading from '@theme/Heading';
 import styles from './index.module.css';
 
-function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+const lines = [
+  { prompt: 'guest@geluodan:~$', cmd: 'whoami', output: 'geluodan' },
+  { prompt: 'guest@geluodan:~$', cmd: 'cat /etc/motd', output: '记录学习与思考' },
+];
+
+function Terminal() {
+  const [visible, setVisible] = useState([]);
+
+  useEffect(() => {
+    let idx = 0;
+    const timer = setInterval(() => {
+      if (idx < lines.length) {
+        setVisible(prev => [...prev, idx]);
+        idx++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 400);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <header className={clsx('hero hero--primary', styles.heroBanner)}>
-      <div className="container">
-        <Heading as="h1" className="hero__title">
-          {siteConfig.title}
-        </Heading>
-        <p className="hero__subtitle">{siteConfig.tagline}</p>
+    <div className={styles.terminal}>
+      {lines.map((line, i) => (
+        visible.includes(i) && (
+          <div key={i} className={styles.block}>
+            <div className={styles.line}>
+              <span className={styles.prompt}>{line.prompt} </span>
+              <span className={styles.cmd}>{line.cmd}</span>
+            </div>
+            <div className={styles.output}>{line.output}</div>
+          </div>
+        )
+      ))}
+      <div className={styles.line}>
+        <span className={styles.prompt}>guest@geluodan:~$ </span>
+        <span className={styles.cursor}>&#9608;</span>
       </div>
-    </header>
+    </div>
   );
 }
 
 export default function Home() {
-  const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
       title="geluodan"
       description="geluodan - 记录学习与思考">
-      <HomepageHeader />
+      <main className={styles.page}>
+        <Terminal />
+      </main>
     </Layout>
   );
 }
