@@ -105,38 +105,17 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: '文档',
+            title: '靶机平台',
             items: [
-              {
-                label: 'Tryhackme',
-                to: '/docs/tryhackme',
-              },
-            ],
-          },
-          {
-            title: '社区',
-            items: [
-              {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-              },
-              {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
-              },
-              {
-                label: 'X',
-                href: 'https://x.com/docusaurus',
-              },
+              { label: 'Tryhackme', to: '/docs/tryhackme' },
+              { label: 'HackMyVM', to: '/docs/hackmyvm' },
+              { label: 'MazeSec', to: '/docs/mazesec' },
+              { label: 'Ulab', to: '/docs/ulab' },
             ],
           },
           {
             title: '更多',
             items: [
-              {
-                label: '博客',
-                to: '/blog',
-              },
               {
                 label: 'GitHub',
                 href: 'https://github.com/newSoloman/geluodan',
