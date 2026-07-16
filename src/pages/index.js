@@ -58,6 +58,7 @@ export default function Home() {
       title="geluodan"
       description="geluodan - 记录学习与思考">
       <main className={styles.page}>
+        <p className={styles.motto}>千淘万漉虽辛苦，吹尽狂沙始到金</p>
         <Terminal />
         <div className={styles.grid}>
           {platforms.map(p => (
