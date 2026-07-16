@@ -33,7 +33,7 @@ export default function Home() {
   return (
     <Layout
       title={siteConfig.title}
-      description="格洛丹 - 记录学习与思考">
+      description="geluodan - 记录学习与思考">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

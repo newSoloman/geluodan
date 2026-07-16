@@ -10,7 +10,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: '格洛丹',
+  title: 'geluodan',
   tagline: '记录学习与思考',
   favicon: 'img/favicon.ico',
 
@@ -83,9 +83,9 @@ const config = {
         respectPrefersColorScheme: true,
       },
       navbar: {
-        title: '格洛丹',
+        title: 'geluodan',
         logo: {
-          alt: '格洛丹 Logo',
+          alt: 'geluodan Logo',
           src: 'img/logo.svg',
         },
         items: [
@@ -146,7 +146,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} 格洛丹. 基于 Docusaurus 构建.`,
+        copyright: `Copyright © ${new Date().getFullYear()} geluodan. 基于 Docusaurus 构建.`,
       },
       prism: {
         theme: prismThemes.github,
