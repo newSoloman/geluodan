@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react';
+import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import styles from './index.module.css';
 
 const lines = [
   { prompt: 'guest@geluodan:~$', cmd: 'whoami', output: 'geluodan' },
-  { prompt: 'guest@geluodan:~$', cmd: 'cat /etc/motd', output: '记录学习与思考' },
+  { prompt: 'guest@geluodan:~$', cmd: 'ls -l /targets', output: 'tryhackme  hackmyvm  mazesec  ulab' },
+];
+
+const platforms = [
+  { name: 'Tryhackme', to: '/docs/tryhackme', desc: 'TryHackMe 靶机 Writeup' },
+  { name: 'HackMyVM', to: '/docs/hackmyvm', desc: 'HackMyVM 靶机 Writeup' },
+  { name: 'MazeSec', to: '/docs/mazesec', desc: 'MazeSec 靶机 Writeup' },
+  { name: 'Ulab', to: '/docs/ulab', desc: 'Ulab 靶机 Writeup' },
 ];
 
 function Terminal() {
@@ -19,7 +27,7 @@ function Terminal() {
       } else {
         clearInterval(timer);
       }
-    }, 400);
+    }, 500);
     return () => clearInterval(timer);
   }, []);
 
@@ -51,6 +59,14 @@ export default function Home() {
       description="geluodan - 记录学习与思考">
       <main className={styles.page}>
         <Terminal />
+        <div className={styles.grid}>
+          {platforms.map(p => (
+            <Link key={p.name} to={p.to} className={styles.card}>
+              <h3>{p.name}</h3>
+              <p>{p.desc}</p>
+            </Link>
+          ))}
+        </div>
       </main>
     </Layout>
   );

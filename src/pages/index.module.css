@@ -1,9 +1,12 @@
 .page {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - var(--ifm-navbar-height));
   background: #0d1117;
+  gap: 2.5rem;
+  padding: 2rem 1rem;
 }
 
 .terminal {
@@ -15,12 +18,12 @@
   font-size: 1.05rem;
   line-height: 1.8;
   color: #c9d1d9;
-  min-width: 420px;
-  box-shadow: 0 0 40px rgba(0, 255, 0, 0.05);
+  min-width: 460px;
+  box-shadow: 0 0 40px rgba(88, 166, 255, 0.05);
 }
 
 .block {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1rem;
 }
 
 .line {
@@ -37,7 +40,7 @@
 }
 
 .output {
-  color: #c9d1d9;
+  color: #8b949e;
   padding-left: 0.5rem;
 }
 
@@ -51,11 +54,52 @@
   50% { opacity: 0; }
 }
 
-@media screen and (max-width: 600px) {
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  max-width: 800px;
+  width: 100%;
+}
+
+.card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  text-decoration: none !important;
+  color: #c9d1d9;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  border-color: #58a6ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(88, 166, 255, 0.1);
+  color: #c9d1d9;
+}
+
+.card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: #58a6ff;
+}
+
+.card p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #8b949e;
+}
+
+@media screen and (max-width: 700px) {
   .terminal {
     min-width: auto;
-    padding: 1.5rem;
-    font-size: 0.9rem;
-    margin: 1rem;
+    padding: 1.25rem;
+    font-size: 0.85rem;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
