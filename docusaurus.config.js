@@ -89,13 +89,10 @@ const config = {
           src: 'img/logo.svg',
         },
         items: [
-          {
-            type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
-            position: 'left',
-            label: '文档',
-          },
-          {to: '/blog', label: '博客', position: 'left'},
+          {to: '/docs/tryhackme', label: 'Tryhackme', position: 'left'},
+          {to: '/docs/hackmyvm', label: 'HackMyVM', position: 'left'},
+          {to: '/docs/mazesec', label: 'MazeSec', position: 'left'},
+          {to: '/docs/ulab', label: 'Ulab', position: 'left'},
           {
             href: 'https://github.com/newSoloman/geluodan',
             label: 'GitHub',
@@ -110,8 +107,8 @@ const config = {
             title: '文档',
             items: [
               {
-                label: '快速开始',
-                to: '/docs/intro',
+                label: 'Tryhackme',
+                to: '/docs/tryhackme',
               },
             ],
           },
