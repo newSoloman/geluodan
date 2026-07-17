@@ -4,14 +4,14 @@
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - var(--ifm-navbar-height));
-  background: linear-gradient(135deg, #faf6ef 0%, #f2ebe0 30%, #faf6ef 60%, #f5efe4 100%);
+  background: linear-gradient(135deg, #1e1e2e 0%, #181825 30%, #1e1e2e 60%, #11111b 100%);
   gap: 2.5rem;
   padding: 2rem 1rem;
   position: relative;
   overflow: hidden;
 }
 
-/* 装饰性背景光圈 */
+/* 装饰性背景光圈 — 薰衣草色 */
 .page::before {
   content: '';
   position: absolute;
@@ -20,11 +20,12 @@
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(200, 150, 100, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(180, 190, 254, 0.12) 0%, transparent 70%);
   filter: blur(60px);
   pointer-events: none;
 }
 
+/* 玫瑰色光圈 */
 .page::after {
   content: '';
   position: absolute;
@@ -33,7 +34,7 @@
   width: 450px;
   height: 450px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(180, 140, 100, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(245, 194, 231, 0.1) 0%, transparent 70%);
   filter: blur(60px);
   pointer-events: none;
 }
@@ -43,29 +44,29 @@
   font-size: 1.8rem;
   letter-spacing: 0.2em;
   margin: 0 0 0.5rem;
-  background: linear-gradient(135deg, #c89638, #b07828, #8b6914, #b07828, #c89638);
+  background: linear-gradient(135deg, #f9e2af, #fab387, #f5c2e7, #b4befe, #f9e2af);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 10px rgba(176, 120, 40, 0.3));
+  filter: drop-shadow(0 0 12px rgba(180, 190, 254, 0.4));
   position: relative;
   z-index: 1;
 }
 
 /* 终端 毛玻璃 */
 .terminal {
-  background: rgba(255, 252, 248, 0.45);
+  background: rgba(30, 30, 46, 0.45);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(200, 175, 140, 0.25);
+  border: 1px solid rgba(180, 190, 254, 0.18);
   border-radius: 14px;
   padding: 2rem 2.5rem;
   font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
   font-size: 1.05rem;
   line-height: 1.8;
-  color: #3d3629;
+  color: #cdd6f4;
   min-width: 460px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(180, 190, 254, 0.06);
   position: relative;
   z-index: 1;
 }
@@ -79,21 +80,21 @@
 }
 
 .prompt {
-  color: #7c6846;
+  color: #89b4fa;
   white-space: nowrap;
 }
 
 .cmd {
-  color: #4a7c59;
+  color: #a6e3a1;
 }
 
 .output {
-  color: #6b6358;
+  color: #a6adc8;
   padding-left: 0.5rem;
 }
 
 .cursor {
-  color: #7c6846;
+  color: #b4befe;
   animation: blink 1s step-end infinite;
 }
 
@@ -114,37 +115,37 @@
 
 /* 卡片 毛玻璃 */
 .card {
-  background: rgba(255, 252, 248, 0.45);
+  background: rgba(30, 30, 46, 0.45);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(200, 175, 140, 0.22);
+  border: 1px solid rgba(180, 190, 254, 0.15);
   border-radius: 14px;
   padding: 1.25rem 1rem;
   text-align: center;
   text-decoration: none !important;
-  color: #3d3629;
+  color: #cdd6f4;
   transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .card:hover {
-  border-color: rgba(140, 105, 55, 0.4);
+  border-color: rgba(180, 190, 254, 0.35);
   transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(124, 104, 70, 0.12);
-  color: #3d3629;
-  background: rgba(255, 252, 248, 0.6);
+  box-shadow: 0 12px 32px rgba(180, 190, 254, 0.1);
+  color: #cdd6f4;
+  background: rgba(30, 30, 46, 0.6);
 }
 
 .card h3 {
   margin: 0 0 0.5rem;
   font-size: 1rem;
-  color: #7c6846;
+  color: #b4befe;
 }
 
 .card p {
   margin: 0;
   font-size: 0.8rem;
-  color: #6b6358;
+  color: #a6adc8;
 }
 
 @media screen and (max-width: 700px) {

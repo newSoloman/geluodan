@@ -1,89 +1,89 @@
 /**
- * 米白色暖色调 + 毛玻璃 Glassmorphism
+ * Catppuccin Mocha 主题 + 毛玻璃 Glassmorphism
+ * https://catppuccin.com/palette
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap');
 
 :root {
-  --ifm-color-primary: #7c6846;
-  --ifm-color-primary-dark: #6f5c3e;
-  --ifm-color-primary-darker: #6a573b;
-  --ifm-color-primary-darkest: #574830;
-  --ifm-color-primary-light: #8b7550;
-  --ifm-color-primary-lighter: #937d5a;
-  --ifm-color-primary-lightest: #a8906e;
+  --ifm-color-primary: #b4befe;
+  --ifm-color-primary-dark: #9d9efe;
+  --ifm-color-primary-darker: #8e8efe;
+  --ifm-color-primary-darkest: #6c6cfd;
+  --ifm-color-primary-light: #c6cefe;
+  --ifm-color-primary-lighter: #d4dafe;
+  --ifm-color-primary-lightest: #eef0ff;
 
-  --ifm-background-color: #faf6ef;
-  --ifm-background-surface-color: rgba(255, 252, 248, 0.6);
+  --ifm-background-color: #1e1e2e;
+  --ifm-background-surface-color: rgba(24, 24, 37, 0.6);
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.04);
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.05);
   --ifm-font-family-monospace: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
 }
 
-[data-theme='light'] {
-  --ifm-color-primary: #7c6846;
-  --ifm-color-primary-dark: #6f5c3e;
-  --ifm-color-primary-darker: #6a573b;
-  --ifm-color-primary-darkest: #574830;
-  --ifm-color-primary-light: #8b7550;
-  --ifm-color-primary-lighter: #937d5a;
-  --ifm-color-primary-lightest: #a8906e;
+[data-theme='dark'] {
+  --ifm-color-primary: #b4befe;
+  --ifm-color-primary-dark: #9d9efe;
+  --ifm-color-primary-darker: #8e8efe;
+  --ifm-color-primary-darkest: #6c6cfd;
+  --ifm-color-primary-light: #c6cefe;
+  --ifm-color-primary-lighter: #d4dafe;
+  --ifm-color-primary-lightest: #eef0ff;
 
-  --ifm-background-color: #faf6ef;
-  --ifm-background-surface-color: rgba(255, 252, 248, 0.6);
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.04);
+  --ifm-background-color: #1e1e2e;
+  --ifm-background-surface-color: rgba(24, 24, 37, 0.6);
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.05);
 }
 
 /* ===== 全局毛玻璃 ===== */
 
-/* 导航栏 毛玻璃 */
+/* 导航栏 */
 .navbar {
-  background: rgba(250, 246, 239, 0.72) !important;
+  background: rgba(30, 30, 46, 0.72) !important;
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border-bottom: 1px solid rgba(180, 160, 130, 0.15);
-  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(180, 190, 254, 0.1);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* 侧边栏 毛玻璃 */
+/* 侧边栏 */
 .theme-doc-sidebar-container {
-  background: rgba(250, 246, 239, 0.5) !important;
+  background: rgba(24, 24, 37, 0.5) !important;
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
-  border-right: 1px solid rgba(180, 160, 130, 0.12);
+  border-right: 1px solid rgba(180, 190, 254, 0.08);
 }
 
-/* 文档主内容区微透明 */
 .main-wrapper {
   background: transparent;
 }
 
-/* 文档卡片 毛玻璃 */
+/* 文档卡片、目录、提示框 */
 .table-of-contents,
 .pagination-nav__item,
 .theme-admonition {
-  background: rgba(255, 252, 248, 0.55) !important;
+  background: rgba(30, 30, 46, 0.5) !important;
   backdrop-filter: blur(10px) saturate(140%);
   -webkit-backdrop-filter: blur(10px) saturate(140%);
-  border: 1px solid rgba(180, 160, 130, 0.18) !important;
+  border: 1px solid rgba(180, 190, 254, 0.12) !important;
   border-radius: 12px !important;
 }
 
-/* 代码块 毛玻璃 */
+/* 代码块 */
 article pre {
-  background: rgba(248, 243, 235, 0.7) !important;
+  background: rgba(17, 17, 27, 0.7) !important;
   backdrop-filter: blur(8px) saturate(140%);
   -webkit-backdrop-filter: blur(8px) saturate(140%);
-  border: 1px solid rgba(180, 160, 130, 0.2) !important;
+  border: 1px solid rgba(180, 190, 254, 0.12) !important;
   border-radius: 12px;
-  color: #3d3629;
+  color: #cdd6f4;
 }
 
-/* 页脚 毛玻璃 */
+/* 页脚 */
 .footer {
-  background: rgba(245, 240, 230, 0.65) !important;
+  background: rgba(24, 24, 37, 0.65) !important;
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border-top: 1px solid rgba(180, 160, 130, 0.15);
+  border-top: 1px solid rgba(180, 190, 254, 0.08);
 }
