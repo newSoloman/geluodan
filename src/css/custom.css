@@ -1,5 +1,5 @@
 /**
- * 米白色暖色调配色
+ * 米白色暖色调 + 毛玻璃 Glassmorphism
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
@@ -14,10 +14,10 @@
   --ifm-color-primary-lighter: #937d5a;
   --ifm-color-primary-lightest: #a8906e;
 
-  --ifm-background-color: #fcfaf6;
-  --ifm-background-surface-color: #f3efe6;
+  --ifm-background-color: #faf6ef;
+  --ifm-background-surface-color: rgba(255, 252, 248, 0.6);
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.06);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.04);
   --ifm-font-family-monospace: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
 }
 
@@ -30,14 +30,60 @@
   --ifm-color-primary-lighter: #937d5a;
   --ifm-color-primary-lightest: #a8906e;
 
-  --ifm-background-color: #fcfaf6;
-  --ifm-background-surface-color: #f3efe6;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.06);
+  --ifm-background-color: #faf6ef;
+  --ifm-background-surface-color: rgba(255, 252, 248, 0.6);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.04);
 }
 
-/* 文档区代码块 */
+/* ===== 全局毛玻璃 ===== */
+
+/* 导航栏 毛玻璃 */
+.navbar {
+  background: rgba(250, 246, 239, 0.72) !important;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-bottom: 1px solid rgba(180, 160, 130, 0.15);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* 侧边栏 毛玻璃 */
+.theme-doc-sidebar-container {
+  background: rgba(250, 246, 239, 0.5) !important;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border-right: 1px solid rgba(180, 160, 130, 0.12);
+}
+
+/* 文档主内容区微透明 */
+.main-wrapper {
+  background: transparent;
+}
+
+/* 文档卡片 毛玻璃 */
+.table-of-contents,
+.pagination-nav__item,
+.theme-admonition {
+  background: rgba(255, 252, 248, 0.55) !important;
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  border: 1px solid rgba(180, 160, 130, 0.18) !important;
+  border-radius: 12px !important;
+}
+
+/* 代码块 毛玻璃 */
 article pre {
-  background: #f5f1ea !important;
-  border: 1px solid #e0dad0;
+  background: rgba(248, 243, 235, 0.7) !important;
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  border: 1px solid rgba(180, 160, 130, 0.2) !important;
+  border-radius: 12px;
   color: #3d3629;
+}
+
+/* 页脚 毛玻璃 */
+.footer {
+  background: rgba(245, 240, 230, 0.65) !important;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-top: 1px solid rgba(180, 160, 130, 0.15);
 }
