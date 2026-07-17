@@ -1,0 +1,80 @@
+TryTrainMe's production code review model is phoning home. Investigate the breach.
+
+---
+
+```
+Q1:Read the deployment log at `/opt/supply-chain/incident/logs/deployment.log`. The replacement model came from a different organisation than the original. What is the name of that organisation?
+
+A1：trustworthy-ai-lab
+
+cat /opt/supply-chain/incident/logs/deployment.log
+The replacement model came from the organisation **`trustworthy-ai-lab`**.
+
+This is confirmed by the log entry:  
+`[2024-01-26 14:32:14] WARN New source organisation detected: trustworthy-ai-lab`
+
+The original model was from `verified-ml-team`.
+
+-----------------------------------------------------------------------------------
+
+Q2:How many days passed between the replacement model being deployed and the SOC alert firing?
+
+A2:21
+
+**21 days** passed between the replacement model being deployed and the SOC alert firing.
+
+- Replacement model deployed: `2024-01-26 14:32:16`
+    
+- SOC alert fired: `2024-02-16 03:14:00`
+    
+
+Counting the calendar days from January 26 to February 16 gives **21 days** (January has 31 days, so 31 − 26 = 5 days remaining in January, plus 16 days in February = 21).
+
+-----------------------------------------------------------------------------------
+
+Q3:Decompile the production model. What Python function does the payload use to execute the shell command?
+
+A3:system
+
+fickling /opt/supply-chain/incident/models/production_model.pkl --trace
+
+-----------------------------------------------------------------------------------
+
+Q4:What shell command does the payload use to capture the host's identity?
+
+A4:hostname
+
+-----------------------------------------------------------------------------------
+
+Q5:The beacon capture log shows the HTTP method used in the outbound request. What is it?
+
+A5:post
+
+-----------------------------------------------------------------------------------
+
+Q6:The engineering team staged `candidate_model.h5` as a replacement but have not yet deployed it. Run `inspect_h5_model.py` against it. What is the name of the suspicious layer it contains?
+
+A6:manipulate_output
+
+
+cd /opt/supply-chain/
+find . -name "candidate_model.h5" 2>/dev/null
+./incident/models/candidate_model.h5
+
+python3 /opt/supply-chain/tools/inspect_h5_model.py /opt/supply-chain/incident/models/candidate_model.h5
+
+- Lambda (manipulate_output): Can contain arbitrary Python code that executes at inference time
+  
+-----------------------------------------------------------------------------------
+
+Q7:The attacker split the campaign ID across two artefacts to avoid full exposure in any single capture. Examine `beacon_capture.log` and the candidate model to recover the complete flag.
+
+
+A7:THM{b4ckd00r_1n_pl41n_s1ght}
+
+find /opt/supply-chain/ -name "beacon_capture.log" 2>/dev/null
+cat /opt/supply-chain/incident/logs/beacon_capture.log
+
+
+```
+
