@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - var(--ifm-navbar-height));
-  background: #0d1117;
+  background: #fcfaf6;
   gap: 2.5rem;
   padding: 2rem 1rem;
 }
@@ -14,24 +14,24 @@
   font-size: 1.8rem;
   letter-spacing: 0.2em;
   margin: 0 0 0.5rem;
-  background: linear-gradient(135deg, #f0c060, #d4a853, #b8860b, #d4a853, #f0c060);
+  background: linear-gradient(135deg, #c89638, #b07828, #8b6914, #b07828, #c89638);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 12px rgba(212, 168, 83, 0.4));
+  filter: drop-shadow(0 0 10px rgba(176, 120, 40, 0.3));
 }
 
 .terminal {
-  background: #0d1117;
-  border: 1px solid #30363d;
+  background: #faf7f1;
+  border: 1px solid #e0dad0;
   border-radius: 8px;
   padding: 2rem 2.5rem;
   font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
   font-size: 1.05rem;
   line-height: 1.8;
-  color: #c9d1d9;
+  color: #3d3629;
   min-width: 460px;
-  box-shadow: 0 0 40px rgba(88, 166, 255, 0.05);
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.06);
 }
 
 .block {
@@ -43,21 +43,21 @@
 }
 
 .prompt {
-  color: #58a6ff;
+  color: #7c6846;
   white-space: nowrap;
 }
 
 .cmd {
-  color: #7ee787;
+  color: #4a7c59;
 }
 
 .output {
-  color: #8b949e;
+  color: #6b6358;
   padding-left: 0.5rem;
 }
 
 .cursor {
-  color: #58a6ff;
+  color: #7c6846;
   animation: blink 1s step-end infinite;
 }
 
@@ -75,33 +75,33 @@
 }
 
 .card {
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: #f3efe6;
+  border: 1px solid #e0dad0;
   border-radius: 8px;
   padding: 1.25rem 1rem;
   text-align: center;
   text-decoration: none !important;
-  color: #c9d1d9;
+  color: #3d3629;
   transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
-  border-color: #58a6ff;
+  border-color: #7c6846;
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(88, 166, 255, 0.1);
-  color: #c9d1d9;
+  box-shadow: 0 4px 20px rgba(124, 104, 70, 0.12);
+  color: #3d3629;
 }
 
 .card h3 {
   margin: 0 0 0.5rem;
   font-size: 1rem;
-  color: #58a6ff;
+  color: #7c6846;
 }
 
 .card p {
   margin: 0;
   font-size: 0.8rem;
-  color: #8b949e;
+  color: #6b6358;
 }
 
 @media screen and (max-width: 700px) {

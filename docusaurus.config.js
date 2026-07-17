@@ -80,7 +80,7 @@ const config = {
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
       colorMode: {
-        defaultMode: 'dark',
+        defaultMode: 'light',
         respectPrefersColorScheme: false,
       },
       navbar: {
@@ -102,7 +102,7 @@ const config = {
         ],
       },
       footer: {
-        style: 'dark',
+        style: 'light',
         links: [
           {
             title: '靶机平台',

@@ -1,42 +1,43 @@
 /**
- * 终端风格配色
+ * 米白色暖色调配色
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap');
 
 :root {
-  --ifm-color-primary: #58a6ff;
-  --ifm-color-primary-dark: #4090f0;
-  --ifm-color-primary-darker: #3088ed;
-  --ifm-color-primary-darkest: #1a70d4;
-  --ifm-color-primary-light: #70b4ff;
-  --ifm-color-primary-lighter: #82bcff;
-  --ifm-color-primary-lightest: #a8d1ff;
+  --ifm-color-primary: #7c6846;
+  --ifm-color-primary-dark: #6f5c3e;
+  --ifm-color-primary-darker: #6a573b;
+  --ifm-color-primary-darkest: #574830;
+  --ifm-color-primary-light: #8b7550;
+  --ifm-color-primary-lighter: #937d5a;
+  --ifm-color-primary-lightest: #a8906e;
 
-  --ifm-background-color: #0d1117;
-  --ifm-background-surface-color: #161b22;
+  --ifm-background-color: #fcfaf6;
+  --ifm-background-surface-color: #f3efe6;
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.05);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.06);
   --ifm-font-family-monospace: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
 }
 
-[data-theme='dark'] {
-  --ifm-color-primary: #58a6ff;
-  --ifm-color-primary-dark: #4090f0;
-  --ifm-color-primary-darker: #3088ed;
-  --ifm-color-primary-darkest: #1a70d4;
-  --ifm-color-primary-light: #70b4ff;
-  --ifm-color-primary-lighter: #82bcff;
-  --ifm-color-primary-lightest: #a8d1ff;
+[data-theme='light'] {
+  --ifm-color-primary: #7c6846;
+  --ifm-color-primary-dark: #6f5c3e;
+  --ifm-color-primary-darker: #6a573b;
+  --ifm-color-primary-darkest: #574830;
+  --ifm-color-primary-light: #8b7550;
+  --ifm-color-primary-lighter: #937d5a;
+  --ifm-color-primary-lightest: #a8906e;
 
-  --ifm-background-color: #0d1117;
-  --ifm-background-surface-color: #161b22;
-  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.05);
+  --ifm-background-color: #fcfaf6;
+  --ifm-background-surface-color: #f3efe6;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.06);
 }
 
-/* 文档区代码块终端化 */
+/* 文档区代码块 */
 article pre {
-  background: #0d1117 !important;
-  border: 1px solid #30363d;
+  background: #f5f1ea !important;
+  border: 1px solid #e0dad0;
+  color: #3d3629;
 }
