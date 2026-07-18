@@ -64,20 +64,6 @@ function StatCell({ total, perPlatform }) {
           <span className={styles.statTotal}>{total}</span>
           <span className={styles.statUnit}>篇文章</span>
         </div>
-        <div className={styles.statBar}>
-          {entries.map(([key, meta]) => {
-            const count = perPlatform[key] ?? 0;
-            const pct = total > 0 ? (count / total) * 100 : 0;
-            return (
-              <div
-                key={key}
-                className={styles.statBarSegment}
-                style={{ flex: pct || 0.01 }}
-                title={`${meta.name}: ${count} 篇`}
-              />
-            );
-          })}
-        </div>
         <div className={styles.statLegend}>
           {entries.map(([key, meta]) => (
             <span key={key} className={styles.statLegendItem}>

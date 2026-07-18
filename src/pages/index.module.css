@@ -318,28 +318,6 @@
   color: #a6adc8;
 }
 
-/* 分布条 */
-.statBar {
-  display: flex;
-  gap: 3px;
-  height: 4px;
-  border-radius: 2px;
-  overflow: hidden;
-  background: rgba(180, 190, 254, 0.06);
-  margin-bottom: 0.65rem;
-}
-
-.statBarSegment {
-  border-radius: 2px;
-  min-width: 4px;
-  transition: flex 0.5s ease;
-}
-
-.statBarSegment:nth-child(1) { background: #f38ba8; }
-.statBarSegment:nth-child(2) { background: #89b4fa; }
-.statBarSegment:nth-child(3) { background: #a6e3a1; }
-.statBarSegment:nth-child(4) { background: #cba6f7; }
-
 /* 图例 */
 .statLegend {
   display: flex;
