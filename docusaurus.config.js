@@ -74,6 +74,10 @@ const config = {
     ],
   ],
 
+  plugins: [
+    './plugins/article-count',
+  ],
+
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({

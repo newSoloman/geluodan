@@ -148,11 +148,101 @@
   color: #a6adc8;
 }
 
+/* 统计栏 毛玻璃 */
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: rgba(30, 30, 46, 0.45);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(180, 190, 254, 0.15);
+  border-radius: 14px;
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 1;
+}
+
+.statTotal {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.statIcon {
+  font-size: 1.3rem;
+}
+
+.statNumber {
+  font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #b4befe;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.95rem;
+  color: #a6adc8;
+}
+
+.statDivider {
+  width: 1px;
+  height: 28px;
+  background: rgba(180, 190, 254, 0.2);
+  border-radius: 1px;
+}
+
+.statBreakdown {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.statItem {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.statPlatform {
+  color: #a6adc8;
+}
+
+.statCount {
+  font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  font-weight: 600;
+  color: #a6e3a1;
+  background: rgba(166, 227, 161, 0.1);
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
 @media screen and (max-width: 700px) {
   .terminal {
     min-width: auto;
     padding: 1.25rem;
     font-size: 0.85rem;
+  }
+
+  .stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+  }
+
+  .statDivider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .statBreakdown {
+    gap: 0.75rem;
   }
 
   .grid {

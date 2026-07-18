@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
+import { usePluginData } from '@docusaurus/useGlobalData';
 import styles from './index.module.css';
 
 const lines = [
@@ -52,6 +53,39 @@ function Terminal() {
   );
 }
 
+function Stats() {
+  const data = usePluginData('article-count');
+  const { total = 0, perPlatform = {} } = data ?? {};
+
+  if (total === 0) return null;
+
+  const labels = {
+    tryhackme: 'TryHackMe',
+    hackmyvm: 'HackMyVM',
+    mazesec: 'MazeSec',
+    ulab: 'Ulab',
+  };
+
+  return (
+    <div className={styles.stats}>
+      <div className={styles.statTotal}>
+        <span className={styles.statIcon}>📝</span>
+        <span className={styles.statNumber}>{total}</span>
+        <span className={styles.statLabel}>篇文章</span>
+      </div>
+      <div className={styles.statDivider} />
+      <div className={styles.statBreakdown}>
+        {Object.entries(labels).map(([key, name]) => (
+          <span key={key} className={styles.statItem}>
+            <span className={styles.statPlatform}>{name}</span>
+            <span className={styles.statCount}>{perPlatform[key] ?? 0}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <Layout
@@ -60,6 +94,7 @@ export default function Home() {
       <main className={styles.page}>
         <p className={styles.motto}>千淘万漉虽辛苦，吹尽狂沙始到金</p>
         <Terminal />
+        <Stats />
         <div className={styles.grid}>
           {platforms.map(p => (
             <Link key={p.name} to={p.to} className={styles.card}>
