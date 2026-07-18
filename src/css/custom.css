@@ -1,9 +1,9 @@
 /**
- * Catppuccin Mocha 主题 + 毛玻璃 Glassmorphism
+ * Catppuccin Mocha 主题 + 克制玻璃质感
  * https://catppuccin.com/palette
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap');
 
 :root {
@@ -16,7 +16,7 @@
   --ifm-color-primary-lightest: #eef0ff;
 
   --ifm-background-color: #1e1e2e;
-  --ifm-background-surface-color: rgba(24, 24, 37, 0.6);
+  --ifm-background-surface-color: #1e1e2e;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.05);
   --ifm-font-family-monospace: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
@@ -32,58 +32,119 @@
   --ifm-color-primary-lightest: #eef0ff;
 
   --ifm-background-color: #1e1e2e;
-  --ifm-background-surface-color: rgba(24, 24, 37, 0.6);
+  --ifm-background-surface-color: #1e1e2e;
   --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.05);
 }
 
-/* ===== 全局毛玻璃 ===== */
+/* ===== 全局基础 ===== */
 
-/* 导航栏 */
+body {
+  background-color: #1e1e2e;
+}
+
+/* 全局噪点纹理 — 叠加在背景上增加材质感 */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* 内容区置顶，不被噪点遮盖 */
+.navbar,
+.main-wrapper,
+.footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== 导航栏 — 保留轻玻璃 ===== */
 .navbar {
-  background: rgba(30, 30, 46, 0.72) !important;
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  background: rgba(30, 30, 46, 0.78) !important;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
   border-bottom: 1px solid rgba(180, 190, 254, 0.1);
   box-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* 侧边栏 */
+/* ===== 侧边栏 — 减少玻璃、更实体 ===== */
 .theme-doc-sidebar-container {
-  background: rgba(24, 24, 37, 0.5) !important;
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-  border-right: 1px solid rgba(180, 190, 254, 0.08);
+  background: rgba(24, 24, 37, 0.7) !important;
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  border-right: 1px solid rgba(180, 190, 254, 0.06);
 }
 
 .main-wrapper {
   background: transparent;
 }
 
-/* 文档卡片、目录、提示框 */
+/* ===== 文档卡片 / 目录 / 提示框 — 微玻璃 ===== */
 .table-of-contents,
 .pagination-nav__item,
 .theme-admonition {
-  background: rgba(30, 30, 46, 0.5) !important;
-  backdrop-filter: blur(10px) saturate(140%);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  border: 1px solid rgba(180, 190, 254, 0.12) !important;
+  background: rgba(30, 30, 46, 0.55) !important;
+  backdrop-filter: blur(4px) saturate(120%);
+  -webkit-backdrop-filter: blur(4px) saturate(120%);
+  border: 1px solid rgba(180, 190, 254, 0.1) !important;
   border-radius: 12px !important;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-/* 代码块 */
+.table-of-contents:hover,
+.pagination-nav__item:hover {
+  border-color: rgba(180, 190, 254, 0.2) !important;
+  box-shadow: 0 0 16px rgba(180, 190, 254, 0.06);
+}
+
+/* ===== 代码块 — 轻玻璃 ===== */
 article pre {
-  background: rgba(17, 17, 27, 0.7) !important;
-  backdrop-filter: blur(8px) saturate(140%);
-  -webkit-backdrop-filter: blur(8px) saturate(140%);
-  border: 1px solid rgba(180, 190, 254, 0.12) !important;
+  background: rgba(17, 17, 27, 0.75) !important;
+  backdrop-filter: blur(4px) saturate(120%);
+  -webkit-backdrop-filter: blur(4px) saturate(120%);
+  border: 1px solid rgba(180, 190, 254, 0.1) !important;
   border-radius: 12px;
   color: #cdd6f4;
 }
 
-/* 页脚 */
+/* ===== 页脚 — 更实体 ===== */
 .footer {
-  background: rgba(24, 24, 37, 0.65) !important;
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border-top: 1px solid rgba(180, 190, 254, 0.08);
+  background: rgba(24, 24, 37, 0.8) !important;
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  border-top: 1px solid rgba(180, 190, 254, 0.06);
+}
+
+/* ===== 全局动画关键帧 ===== */
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(180, 190, 254, 0.08),
+                0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(180, 190, 254, 0.18),
+                0 8px 32px rgba(0, 0, 0, 0.25);
+  }
+}
+
+@keyframes borderGlow {
+  0%, 100% {
+    border-color: rgba(180, 190, 254, 0.15);
+  }
+  50% {
+    border-color: rgba(180, 190, 254, 0.35);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
 }
