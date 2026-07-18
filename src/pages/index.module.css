@@ -338,18 +338,6 @@
   font-weight: 600;
 }
 
-.statDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-
-.statDot[data-platform='tryhackme'] { background: #f38ba8; }
-.statDot[data-platform='hackmyvm']  { background: #89b4fa; }
-.statDot[data-platform='mazesec']   { background: #a6e3a1; }
-.statDot[data-platform='ulab']      { background: #cba6f7; }
-
 /* ===== 响应式 ===== */
 
 @media screen and (max-width: 800px) {

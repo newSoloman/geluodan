@@ -67,7 +67,6 @@ function StatCell({ total, perPlatform }) {
         <div className={styles.statLegend}>
           {entries.map(([key, meta]) => (
             <span key={key} className={styles.statLegendItem}>
-              <span className={styles.statDot} data-platform={key} />
               {meta.name} <strong>{perPlatform[key] ?? 0}</strong>
             </span>
           ))}
