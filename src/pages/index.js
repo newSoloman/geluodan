@@ -10,7 +10,7 @@ const lines = [
 ];
 
 const platformMeta = {
-  tryhackme: { name: 'TryHackMe', to: '/docs/tryhackme', desc: 'TryHackMe 靶机', featured: true },
+  tryhackme: { name: 'TryHackMe', to: '/docs/tryhackme', desc: 'TryHackMe 靶机' },
   hackmyvm:  { name: 'HackMyVM',  to: '/docs/hackmyvm',  desc: 'HackMyVM 靶机' },
   mazesec:   { name: 'MazeSec',   to: '/docs/mazesec',   desc: 'MazeSec 靶机' },
   ulab:      { name: 'Ulab',      to: '/docs/ulab',      desc: 'Ulab 靶机' },
@@ -91,14 +91,14 @@ function StatCell({ total, perPlatform }) {
   );
 }
 
-function PlatformCard({ platformKey, count, featured }) {
+function PlatformCard({ platformKey, count }) {
   const meta = platformMeta[platformKey];
   if (!meta) return null;
 
   return (
     <Link
       to={meta.to}
-      className={`${styles.bentoCard} ${styles.platformCard} ${featured ? styles.featured : ''}`}
+      className={`${styles.bentoCard} ${styles.platformCard}`}
       data-platform={platformKey}
     >
       <div className={styles.cardGlow} />
@@ -135,12 +135,11 @@ export default function Home() {
         {/* Bento 网格 */}
         <div className={styles.bento}>
           <StatCell total={total} perPlatform={perPlatform} />
-          {Object.entries(platformMeta).map(([key, meta]) => (
+          {Object.entries(platformMeta).map(([key]) => (
             <PlatformCard
               key={key}
               platformKey={key}
               count={perPlatform[key] ?? 0}
-              featured={meta.featured}
             />
           ))}
         </div>
