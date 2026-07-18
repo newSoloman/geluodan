@@ -113,7 +113,6 @@ function PlatformCard({ platformKey, count, featured }) {
         <p className={styles.cardDesc}>{meta.desc}</p>
         <span className={styles.cardArrow}>→</span>
       </div>
-      <div className={styles.cardAccent} />
     </Link>
   );
 }
