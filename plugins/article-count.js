@@ -3,7 +3,30 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * 统计 docs/ 下各平台的文章数量（排除 index.mdx）
+ * 递归统计目录下所有 .mdx 文章数量（排除 index.mdx）
+ */
+function countArticlesRecursive(dir) {
+  let count = 0;
+  if (!fs.existsSync(dir)) return count;
+
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      count += countArticlesRecursive(fullPath);
+    } else if (
+      entry.isFile() &&
+      entry.name.endsWith('.mdx') &&
+      entry.name !== 'index.mdx'
+    ) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+/**
+ * 统计 docs/ 下各平台的文章数量（排除 index.mdx，递归扫描子目录）
  */
 module.exports = function articleCountPlugin(_context, _options) {
   return {
@@ -18,15 +41,9 @@ module.exports = function articleCountPlugin(_context, _options) {
 
       for (const platform of platforms) {
         const dir = path.join(docsDir, platform);
-        if (fs.existsSync(dir)) {
-          const articles = fs.readdirSync(dir).filter(
-            (f) => f.endsWith('.mdx') && f !== 'index.mdx',
-          );
-          perPlatform[platform] = articles.length;
-          total += articles.length;
-        } else {
-          perPlatform[platform] = 0;
-        }
+        const count = countArticlesRecursive(dir);
+        perPlatform[platform] = count;
+        total += count;
       }
 
       actions.setGlobalData({ total, perPlatform });
