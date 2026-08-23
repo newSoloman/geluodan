@@ -1,0 +1,77 @@
+---
+title: 1. 被动探测
+sidebar_position: 4
+---
+
+# 被动探测
+
+## 1. whois 探测
+
+```
+┌──(kali㉿kali)-[~/Desktop]
+└─$ whois baidu.com
+   Domain Name: BAIDU.COM
+   Registry Domain ID: 11181110_DOMAIN_COM-VRSN
+   Registrar WHOIS Server: whois.markmonitor.com
+   Registrar URL: http://markmonitor.com
+   Updated Date: 2026-08-17T07:44:00Z
+   Creation Date: 1999-10-11T11:05:17Z
+   Registry Expiry Date: 2028-10-11T11:05:17Z
+   Registrar: MarkMonitor Information Technology (Shanghai) Co., Ltd.
+   Registrar IANA ID: 3838
+   Registrar Abuse Contact Email: abusecomplaints@markmonitor.com
+   Registrar Abuse Contact Phone: +1.2083895740
+```
+
+## 2. nslookup 与 dig
+
+```
+┌──(kali㉿kali)-[~/Desktop]
+└─$ nslookup -type=A baidu.com 1.1.1.1
+Server:         1.1.1.1
+Address:        1.1.1.1#53
+
+Non-authoritative answer:
+Name:   baidu.com
+Address: 111.63.65.103
+Name:   baidu.com
+Address: 124.237.177.164
+Name:   baidu.com
+Address: 110.242.74.102
+Name:   baidu.com
+Address: 111.63.65.247
+
+┌──(kali㉿kali)-[~/Desktop]
+└─$ dig @1.1.1.1 baidu.com MX
+
+; <<>> DiG 9.20.23-1-Debian <<>> @1.1.1.1 baidu.com MX
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 40608
+;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;baidu.com.                     IN      MX
+
+;; ANSWER SECTION:
+baidu.com.              600     IN      MX      20 mx.baidu.com.
+baidu.com.              600     IN      MX      10 mx.maillb.baidu.com.
+
+;; Query time: 107 msec
+;; SERVER: 1.1.1.1#53(1.1.1.1) (UDP)
+;; WHEN: Sat Aug 22 21:13:36 EDT 2026
+;; MSG SIZE  rcvd: 83
+```
+
+## 3. dnsdumpster
+
+https://dnsdumpster.com/
+
+https://crt.sh/
+
+## 4. Shodan.io
+
+https://www.shodan.io/
