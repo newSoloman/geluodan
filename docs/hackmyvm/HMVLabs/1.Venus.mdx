@@ -1,0 +1,1720 @@
+---
+title: 1. Venus
+sidebar_position: 1
+---
+
+# Venus
+
+HMVLabs 第一章：**Venus**——一个面向初学者的 Linux/CTF 综合靶机。
+
+靶机内共有 **51 个连续任务**，每个任务会指引你找到下一个用户的密码，一路从 `hacker` 打到通关。虽然关卡简单，但覆盖了 Linux 使用、文本处理、编码解码、Web 请求、数据库、密码破解等大量基础知识点，非常适合练手。
+
+**连接信息：**
+
+| 项目 | 值 |
+|------|----|
+| Host | `venus.hackmyvm.eu` |
+| Port | `5000` |
+| User | `hacker` |
+| Pass | `havefun!` |
+
+## 一、连接靶机与任务机制
+
+### 连接靶机
+
+```bash
+ssh -p 5000 hacker@venus.hackmyvm.eu
+```
+
+### 阅读 readme.txt
+
+登录后先读一下主目录里的 `readme.txt`，它会告诉我们整个靶机的玩法：
+
+```text
+# EN
+Hello hax0r,
+Welcome to the HMVLab Chapter 1: Venus!
+This is a CTF for beginners where you can practice your skills with Linux and CTF
+so lets start! :)
+
+First of all, the home of each user is in /pwned/USER and in it you will find a file called mission.txt which will contain
+the mission to complete to get the password of the next user.
+It will also contain the flagz.txt file, which if you are registered at https://hackmyvm.eu you can enter to participate in the ranking (optional).
+And for a bit of improvisation, there are secret levels and hidden flags :D
+You will not have write permissions in most folders so if you need to write a script or something
+use /tmp folder, keep in mind that it is frequently deleted ...
+
+If you have questions/ideas or want to comment us anything you can join
+to our Discord: https://discord.gg/DxDFQrJ
+
+Remember there are more people playing so be respectful.
+Hack & Fun!
+```
+
+简单翻译一下：
+
+> 你好，黑客（hax0r），欢迎来到 HMVLab 第一章：Venus！
+> 这是一个面向初学者的 CTF 挑战，你可以在这里练习 Linux 和 CTF 技巧，那么，开始吧！ :)
+>
+> 首先，每个用户的家目录都在 `/pwned/用户名` 下，里面会有一个 `mission.txt` 文件，其中包含了获取下一个用户密码所需完成的任务。
+> 同时里面也会有 `flagz.txt` 文件，如果你在 [hackmyvm.eu](https://hackmyvm.eu/) 注册了账号，可以把 flag 提交上去参与排名（非必须）。
+>
+> 另外，我们还即兴添加了一些隐藏关卡和隐藏 flag :D
+> 大多数文件夹你没有写入权限，所以如果你需要写脚本或其他东西，请使用 `/tmp` 文件夹，注意该目录下的文件会被定期清理……
+>
+> 如果你有任何问题、想法，或者想跟我们聊聊，欢迎加入我们的 Discord 服务器。
+> 请记住，还有其他人也在玩，请互相尊重。黑客愉快，玩得开心！
+
+**机制总结：**
+
+- 每个用户的家目录在 `/pwned/<用户名>` 下。
+- 里面有两个关键文件：`mission.txt`（当前任务）和 `flagz.txt`（当前用户的 flag）。
+- 完成任务后拿到**下一个用户**的密码，用 `su` 或 `ssh` 切换过去，继续下一关。
+- 大部分目录没有写权限，需要临时写文件时用 `/tmp`。
+
+## 二、任务 01–09：文件查找与基础操作
+
+### 任务 0x01 · sophia：隐藏文件
+
+> **任务描述**：用户 sophia 把她的密码保存在当前文件夹里的一个隐藏文件中，找到它并登录为 sophia。
+
+先列出目录内容：
+
+```bash
+hacker@venus:~$ ls
+mission.txt  readme.txt
+hacker@venus:~$ ls -al
+total 40
+drwxr-x--- 2 root   hacker 4096 May  4 07:40 .
+drwxr-xr-x 1 root   root   4096 May  4 07:40 ..
+-rw-r----- 1 root   hacker   31 May  4 07:40 ...
+-rw-r--r-- 1 hacker hacker  220 Mar  8 15:21 .bash_logout
+-rw-r--r-- 1 hacker hacker 3526 Mar  8 15:21 .bashrc
+-rw-r----- 1 root   hacker   16 May  4 07:39 .myhiddenpazz
+-rw-r--r-- 1 hacker hacker  807 Mar  8 15:21 .profile
+-rw-r----- 1 root   hacker  287 May  4 07:39 mission.txt
+-rw-r----- 1 root   hacker 1921 May  4 07:39 readme.txt
+```
+
+用 `ls -al` 可以看到目录下有一个隐藏文件 `.myhiddenpazz`，直接读取：
+
+```bash
+hacker@venus:~$ cat .myhiddenpazz
+Y1o645M3mR84ejc
+```
+
+得到 sophia 的密码，切换用户：
+
+```bash
+hacker@venus:~$ su sophia
+Password: 
+```
+
+登录后所在的工作目录还是 `/pwned/hacker`，但 `hacker` 目录对 sophia 没有读权限，需要切换到自己的目录：
+
+```text
+sophia@venus:/pwned/hacker$ ls -al
+ls: cannot open directory '.': Permission denied
+```
+
+```bash
+sophia@venus:/pwned/hacker$ cd /pwned/sophia
+sophia@venus:/pwned/sophia$ ls -al
+total 32
+drwxr-x--- 2 root   sophia 4096 May  4 07:39 .
+drwxr-xr-x 1 root   root   4096 May  4 07:39 ..
+-rw-r--r-- 1 sophia sophia  220 Mar  8 15:21 .bash_logout
+-rw-r--r-- 1 sophia sophia 3526 Mar  8 15:21 .bashrc
+-rw-r--r-- 1 sophia sophia  807 Mar  8 15:21 .profile
+-rw-r----- 1 root   sophia   31 May  4 07:39 flagz.txt
+-rw-r----- 1 root   sophia  359 May  4 07:39 mission.txt
+sophia@venus:~$ cat flagz.txt
+8===LUzzNuv8NB59iztWUIQS===D~~
+```
+
+> **本关 flag**：`8===LUzzNuv8NB59iztWUIQS===D~~`
+
+### 任务 0x02 · angela：whereis 定位文件
+
+> **任务描述**：用户 angela 把她的密码保存在一个文件里，但她不记得放在哪里了……她只记得那个文件名叫做 `whereismypazz.txt`。
+
+只知道文件名、不知道路径时，可以用 `whereis` 搜索：
+
+```bash
+sophia@venus:~$ whereis whereismypazz.txt
+whereismypazz.txt: /usr/share/whereismypazz.txt
+sophia@venus:~$ cat /usr/share/whereismypazz.txt
+oh5p9gAABugHBje
+```
+
+切换到 angela：
+
+```bash
+sophia@venus:~$ su angela
+```
+
+```bash
+angela@venus:/pwned/sophia$ cd /pwned/angela
+angela@venus:~$ ls -al
+total 108
+drwxr-x--- 2 root   angela  4096 May  4 07:39 .
+drwxr-xr-x 1 root   root    4096 May  4 07:39 ..
+-rw-r--r-- 1 angela angela   220 Mar  8 15:21 .bash_logout
+-rw-r--r-- 1 angela angela  3526 Mar  8 15:21 .bashrc
+-rw-r--r-- 1 angela angela   807 Mar  8 15:21 .profile
+-rw-r----- 1 root   angela 73888 May  4 07:39 findme.txt
+-rw-r----- 1 root   angela    31 May  4 07:39 flagz.txt
+-rw-r----- 1 root   angela   216 May  4 07:39 mission.txt
+angela@venus:~$ cat flagz.txt
+8===SjMYBmMh4bk49TKq7PM8===D~~
+```
+
+> **本关 flag**：`8===SjMYBmMh4bk49TKq7PM8===D~~`
+
+### 任务 0x03 · emma：sed 读取指定行
+
+> **任务描述**：用户 emma 的密码在文件 `findme.txt` 的第 4069 行。
+
+先定位 `findme.txt` 的位置，再用 `sed` 输出第 4069 行：
+
+```bash
+angela@venus:~$ find / -name findme.txt 2>/dev/null
+/pwned/angela/findme.txt
+angela@venus:~$ sed -n '4069p' /pwned/angela/findme.txt
+fIvltaGaq0OUH8O
+```
+
+切换到 emma：
+
+```bash
+angela@venus:~$ su emma
+```
+
+```bash
+emma@venus:~$ cat flagz.txt
+8===0daqdDlmd9XogkiHu4yq===D~~
+```
+
+> **本关 flag**：`8===0daqdDlmd9XogkiHu4yq===D~~`
+
+### 任务 0x04 · mia：名为 `-` 的文件
+
+> **任务描述**：用户 mia 把她的密码留在了文件 `-` 中。
+
+文件名叫 `-`，直接 `cat -` 会被当成标准输入参数，需要加 `./` 路径前缀：
+
+```bash
+emma@venus:~$ cat ./-
+iKXIYg0pyEH2Hos
+```
+
+切换到 mia：
+
+```bash
+emma@venus:~$ su mia
+```
+
+```bash
+mia@venus:~$ cat flagz.txt
+8===FBMdY8hel2VMA3BaYJin===D~~
+```
+
+> **本关 flag**：`8===FBMdY8hel2VMA3BaYJin===D~~`
+
+### 任务 0x05 · camila：查找 hereiam 文件夹
+
+> **任务描述**：用户 camila 似乎把她的密码留在一个名为 **hereiam** 的文件夹里。
+
+不知道文件夹在哪，用 `find` 按名称查找目录：
+
+```bash
+mia@venus:~$ find / -type d -name hereiam 2>/dev/null
+/opt/hereiam
+mia@venus:~$ ls -al /opt/hereiam
+total 12
+drwxr-xr-x 2 root root 4096 May  4 07:39 .
+drwxr-xr-x 1 root root 4096 May  4 07:39 ..
+-rw-r--r-- 1 root root   16 May  4 07:39 .here
+mia@venus:~$ cat /opt/hereiam/.here
+F67aDmCAAgOOaOc
+```
+
+密码藏在一个隐藏文件 `.here` 里，读取后切换到 camila：
+
+```bash
+mia@venus:~$ su camila
+```
+
+```bash
+camila@venus:~$ cat flagz.txt
+8===iDIi5sm1mDuqGmU5Psx6===D~~
+```
+
+> **本关 flag**：`8===iDIi5sm1mDuqGmU5Psx6===D~~`
+
+### 任务 0x06 · luna：muack 目录迷宫
+
+> **任务描述**：用户 luna 把她的密码放在了 muack 文件夹里的某个文件中。
+
+先找到 `muack` 目录：
+
+```bash
+camila@venus:~$ find / -type d -name muack 2>/dev/null
+/pwned/camila/muack
+camila@venus:~$ ls -al muack
+total 2212
+drwxr-xr-x 551 root root   12288 May  4 07:39 .
+drwxr-x---   3 root camila  4096 May  4 07:39 ..
+drwxr-xr-x 152 root root    4096 May  4 07:39 1
+drwxr-xr-x   2 root root    4096 May  4 07:39 10
+drwxr-xr-x   2 root root    4096 May  4 07:39 100
+drwxr-xr-x   2 root root    4096 May  4 07:39 101
+drwxr-xr-x   2 root root    4096 May  4 07:39 102
+drwxr-xr-x   2 root root    4096 May  4 07:39 103
+...
+```
+
+`muack` 里有几百个数字命名的子目录，看着像迷宫，但其中真正的**文件**只有一个。直接统计真实文件数量：
+
+```bash
+camila@venus:~$ find muack -type f | wc -l
+1
+camila@venus:~$ find muack -type f
+muack/111/111/muack
+camila@venus:~$ cat muack/111/111/muack
+j3vkuoKQwvbhkMc
+```
+
+只用一个 `find muack -type f` 就绕过了整座迷宫，拿到密码，切换到 luna：
+
+```bash
+camila@venus:~$ su luna
+```
+
+```bash
+luna@venus:~$ cat flagz.txt
+8===KCO34FpIq3nBmHbyZvFh===D~~
+```
+
+> **本关 flag**：`8===KCO34FpIq3nBmHbyZvFh===D~~`
+
+### 任务 0x07 · eleanor：按文件大小查找
+
+> **任务描述**：用户 eleanor 把她的密码保存在一个大小为 **6969 字节** 的文件中。
+
+用 `find` 的 `-size` 参数按字节大小（`c` 后缀）查找：
+
+```bash
+luna@venus:~$ find / -type f -size 6969c 2>/dev/null
+/usr/share/moon.txt
+luna@venus:~$ cat /usr/share/moon.txt
+UNDchvln6Bmtu7b
+```
+
+切换到 eleanor：
+
+```bash
+luna@venus:~$ su eleanor
+```
+
+```bash
+eleanor@venus:~$ cat flagz.txt
+8===Iq5vbyiQl4ipNrLDArjD===D~~
+```
+
+> **本关 flag**：`8===Iq5vbyiQl4ipNrLDArjD===D~~`
+
+### 任务 0x08 · victoria：按属主查找
+
+> **任务描述**：用户 victoria 把她的密码保存在一个文件中，该文件的所有者是用户 violin。
+
+用 `find` 的 `-user` 参数按属主查找：
+
+```bash
+eleanor@venus:~$ find / -type f -user violin 2>/dev/null
+/usr/local/games/yo
+eleanor@venus:~$ cat /usr/local/games/yo
+pz8OqvJBFxH0cSj
+```
+
+切换到 victoria：
+
+```bash
+eleanor@venus:~$ su victoria
+```
+
+```bash
+victoria@venus:~$ cat flagz.txt
+8===NWyTFi9LLqVsZ4OnuZYN===D~~
+```
+
+> **本关 flag**：`8===NWyTFi9LLqVsZ4OnuZYN===D~~`
+
+### 任务 0x09 · isla：解压 zip
+
+> **任务描述**：用户 isla 把她的密码保存在一个 zip 压缩包里。
+
+将 zip 解压到 `/tmp` 目录下再读取：
+
+```bash
+victoria@venus:~$ unzip passw0rd.zip -d /tmp
+Archive:  passw0rd.zip
+ extracting: /tmp/pwned/victoria/passw0rd.txt
+victoria@venus:~$ cat /tmp/pwned/victoria/passw0rd.txt
+D3XTob0FUImsoBb
+```
+
+切换到 isla：
+
+```bash
+victoria@venus:~$ su isla
+```
+
+```bash
+isla@venus:~$ cat flagz.txt
+8===ZyZqc1suvGe4QlkZHFlq===D~~
+```
+
+> **本关 flag**：`8===ZyZqc1suvGe4QlkZHFlq===D~~`
+
+## 三、任务 10–15：文本处理与权限
+
+### 任务 0x10 · violet：匹配行首
+
+> **任务描述**：用户 violet 的密码位于以 **a9HFX** 开头的那一行中（这 5 个字符本身并不是她密码的一部分）。
+
+用 `grep` 匹配行首，再用 `cut` 去掉前 5 个字符：
+
+```bash
+isla@venus:~$ grep '^a9HFX' passy
+a9HFXWKINVzNQLKLDVAc
+isla@venus:~$ grep '^a9HFX' passy | cut -c 6-
+WKINVzNQLKLDVAc
+```
+
+切换到 violet：
+
+```bash
+isla@venus:~$ su violet
+```
+
+```bash
+violet@venus:~$ cat flagz.txt
+8===LzErk0qFPYJj16mNnnYZ===D~~
+```
+
+> **本关 flag**：`8===LzErk0qFPYJj16mNnnYZ===D~~`
+
+### 任务 0x11 · lucy：匹配行尾
+
+> **任务描述**：用户 lucy 的密码位于以 **0JuAZ** 结尾的那一行中（这最后 5 个字符本身并不是她密码的一部分）。
+
+用 `grep` 匹配行尾，再用 `sed` 把结尾的 `0JuAZ` 去掉：
+
+```bash
+violet@venus:~$ grep '0JuAZ$' end | sed 's/0JuAZ$//'
+OCmMUjebG53giud
+```
+
+切换到 lucy：
+
+```bash
+violet@venus:~$ su lucy
+```
+
+```bash
+lucy@venus:~$ cat flagz.txt
+8===AdCJ4wl8pmbhi770Xbd3===D~~
+```
+
+> **本关 flag**：`8===AdCJ4wl8pmbhi770Xbd3===D~~`
+
+### 任务 0x12 · elena：提取两字符之间的内容
+
+> **任务描述**：用户 elena 的密码位于字符 **fu** 和 **ck** 之间。
+
+用 `sed` 的正则替换，把 `fu` 和 `ck` 之间的内容单独提取出来：
+
+```bash
+lucy@venus:~$ sed -n 's/.*fu\(.*\)ck.*/\1/p' file.yo
+4xZ5lIKYmfPLg9t
+```
+
+切换到 elena：
+
+```bash
+lucy@venus:~$ su elena
+```
+
+```bash
+elena@venus:~$ cat flagz.txt
+8===st1pTdqEQ0bvrJfWGwLA===D~~
+```
+
+> **本关 flag**：`8===st1pTdqEQ0bvrJfWGwLA===D~~`
+
+### 任务 0x13 · alice：环境变量
+
+> **任务描述**：用户 alice 的密码位于一个环境变量中。
+
+用 `env` 查看全部环境变量，发现里面直接躺着 `PASS` 和 `FLAG`：
+
+```bash
+elena@venus:~$ env
+SHELL=/bin/bash
+COLORTERM=truecolor
+PWD=/pwned/elena
+LOGNAME=elena
+MOTD_SHOWN=pam
+HOME=/pwned/elena
+LANG=en_US.UTF-8
+new=00;90:*.ucf-old=00;90:
+SSH_CONNECTION=182.89.61.78 34533 172.25.20.20 22
+FLAG=8===KsRAuDDjwjbsukXNIAjI===D~~
+TERM=xterm-256color
+USER=elena
+PASS=Cgecy2MY2MWbaqt
+SHLVL=8
+SSH_CLIENT=182.89.61.78 34533 22
+PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+MAIL=/var/mail/elena
+SSH_TTY=/dev/pts/23
+OLDPWD=/pwned
+_=/usr/bin/env
+elena@venus:~$ env | grep -i PASS
+PASS=Cgecy2MY2MWbaqt
+```
+
+alice 的密码是 `Cgecy2MY2MWbaqt`，切换到 alice：
+
+```bash
+elena@venus:~$ su alice
+```
+
+```bash
+alice@venus:~$ cat flagz.txt
+8===Qj4NNWp8LOC96S9Rtgrk===D~~
+```
+
+> **本关 flag**：`8===Qj4NNWp8LOC96S9Rtgrk===D~~`
+
+### 任务 0x14 · anna：passwd 文件的注释字段
+
+> **任务描述**：管理员把用户 anna 的密码留在了文件 **passwd** 中的一条注释里。
+
+这里的"注释"指的是 `/etc/passwd` 每行中的 **GECOS 注释字段（第 5 个字段）**。管理员把 anna 的密码写在了这个字段里，用 `grep` 查出 anna 那一行即可：
+
+```bash
+alice@venus:/usr/share/doc/passwd$ grep anna /etc/passwd
+```
+
+拿到注释字段里的密码后，切换到 anna：
+
+```bash
+alice@venus:/usr/share/doc/passwd$ su anna
+```
+
+```bash
+anna@venus:~$ cat flagz.txt
+8===5Y3DhT66fa6Da8RpLKG0===D~~
+```
+
+> **本关 flag**：`8===5Y3DhT66fa6Da8RpLKG0===D~~`
+
+### 任务 0x15 · natalia：sudo 提权
+
+> **任务描述**：也许 sudo 可以帮助你成为 natalia。
+
+查看当前用户的 sudo 权限：
+
+```bash
+anna@venus:~$ sudo -l
+Matching Defaults entries for anna on venus:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
+
+User anna may run the following commands on venus:
+    (natalia) NOPASSWD: /bin/bash
+```
+
+可以看到 anna 被授权以 **natalia** 身份免密运行 `/bin/bash`，直接切换：
+
+```bash
+anna@venus:~$ sudo -u natalia /bin/bash
+```
+
+```bash
+natalia@venus:~$ cat flagz.txt
+8===JWHa1GQq1AYrBWNXEJrH===D~~
+```
+
+> **本关 flag**：`8===JWHa1GQq1AYrBWNXEJrH===D~~`
+
+## 四、任务 16–24：编码与数据提取
+
+### 任务 0x16 · eva：Base64 解码
+
+> **任务描述**：用户 eva 的密码编码在 `base64.txt` 文件中。
+
+```bash
+natalia@venus:~$ cat base64.txt | base64 -d
+upsCA3UFu10fDAO
+```
+
+切换到 eva：
+
+```bash
+natalia@venus:~$ su eva
+```
+
+```bash
+eva@venus:~$ cat flagz.txt
+8===22cqk3iGkGYVqnYrHiof===D~~
+```
+
+> **本关 flag**：`8===22cqk3iGkGYVqnYrHiof===D~~`
+
+### 任务 0x17 · clara：按修改时间查找
+
+> **任务描述**：用户 clara 的密码位于一个修改时间为 **1968 年 5 月 1 日** 的文件中。
+
+用 `find` 的 `-mtime` 参数按修改时间（天数）查找很早以前修改过的文件：
+
+```bash
+eva@venus:~$ find / -type f -mtime +18000 2>/dev/null
+/var/tmp/inicio
+/usr/lib/cmdo
+```
+
+找到两个文件，`/var/tmp/inicio` 是空的，密码在另一个里：
+
+```bash
+eva@venus:~$ cat /var/tmp/inicio
+eva@venus:~$ cat /usr/lib/cmdo
+39YziWp5gSvgQN9
+```
+
+切换到 clara：
+
+```bash
+eva@venus:~$ su clara
+```
+
+```bash
+clara@venus:~$ cat flagz.txt
+8===EJWmHDEQeEN1vIR7NYiH===D~~
+```
+
+> **本关 flag**：`8===EJWmHDEQeEN1vIR7NYiH===D~~`
+
+### 任务 0x18 · frida：zip 密码爆破
+
+> **任务描述**：用户 frida 的密码位于受密码保护的 zip 文件中（rockyou.txt 字典文件可以帮到你）。
+
+把 `protected.zip` 下载到本地，先用 `zip2john` 导出 zip 的 hash，再用 `john` 结合 rockyou 字典爆破：
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ scp -P 5000 clara@venus.hackmyvm.eu:~/protected.zip .
+
+┌──(kali㉿kali)-[~/Desktop]
+└─$ zip2john protected.zip > hash.txt
+ver 1.0 efh 5455 efh 7875 protected.zip/pwned/clara/protected.txt PKZIP Encr: 2b chk, TS_chk, cmplen=28, decmplen=16, crc=239F7473 ts=3CFB cs=3cfb type=0
+
+┌──(kali㉿kali)-[~/Desktop]
+└─$ john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
+Using default input encoding: UTF-8
+Loaded 1 password hash (PKZIP [32/64])
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+pass123          (protected.zip/pwned/clara/protected.txt)
+1g 0:00:00:00 DONE (2026-08-27 23:17) 20.00g/s 163840p/s 163840c/s 163840C/s 123456..whitetiger
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed.
+```
+
+zip 密码是 `pass123`，解压后读取密码：
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ unzip -P pass123 protected.zip
+Archive:  protected.zip
+ extracting: pwned/clara/protected.txt
+┌──(kali㉿kali)-[~/Desktop]
+└─$ cat pwned/clara/protected.txt
+Ed4ErEUJEaMcXli
+```
+
+切换到 frida：
+
+```bash
+clara@venus:~$ su frida
+```
+
+```bash
+frida@venus:~$ cat flagz.txt
+8===Ikg2qj8KT2bGJtWvR6hC===D~~
+```
+
+> **本关 flag**：`8===Ikg2qj8KT2bGJtWvR6hC===D~~`
+
+### 任务 0x19 · eliza：找出唯一重复的字符串
+
+> **任务描述**：用户 eliza 的密码是 repeated.txt 文件中唯一重复出现的字符串（该文件内容未排序）。
+
+先用 `sort` 排序，再用 `uniq -c` 统计每行出现次数，出现 2 次的就是密码：
+
+```bash
+frida@venus:~$ sort repeated.txt | uniq -c | grep 'Fg6b6aoksceQqB9'
+      2 Fg6b6aoksceQqB9
+```
+
+切换到 eliza：
+
+```bash
+frida@venus:~$ su eliza
+```
+
+```bash
+eliza@venus:~$ cat flagz.txt
+8===zwWIPyDf2ozwVhCTxm1I===D~~
+```
+
+> **本关 flag**：`8===zwWIPyDf2ozwVhCTxm1I===D~~`
+
+### 任务 0x20 · iris：SSH 私钥登录
+
+> **任务描述**：用户 iris 把她的密钥留给了我。
+
+发现家目录下有一把私钥 `.iris_key`，用它直接通过 SSH 登录 iris：
+
+```bash
+eliza@venus:~$ ssh -i .iris_key iris@localhost
+```
+
+```bash
+iris@venus:~$ cat flagz.txt
+8===ClrdWOqlZ1vL61zSk9Va===D~~
+```
+
+> **本关 flag**：`8===ClrdWOqlZ1vL61zSk9Va===D~~`
+
+### 任务 0x21 · eloise：Base64 → 图片
+
+> **任务描述**：用户 eloise 以一种特殊的方式保存了她的密码。
+
+先把 `eloise` 文件下载到本地，`base64` 解码后看看是什么文件：
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ scp -P 5000 iris@venus.hackmyvm.eu:~/eloise .
+
+┌──(kali㉿kali)-[~/Desktop]
+└─$ base64 -d eloise | file -
+/dev/stdin: JPEG image data, JFIF standard 1.01, resolution (DPI), density 96x96, segment length 16, Exif Standard: [TIFF image data, big-endian, direntries=4], baseline, precision 8, 394x102, components 3
+```
+
+解码出来是一张 JPEG 图片，保存成文件查看：
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ base64 -d eloise > test.jpg
+```
+
+图片里写着 eloise 的密码 `yOUJlV0SHOnbSPm`，用它登录：
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ ssh -p 5000 eloise@venus.hackmyvm.eu
+```
+
+```bash
+eloise@venus:~$ cat flagz.txt
+8===57CzBLKaEq2N8YBFRu31===D~~
+```
+
+> **本关 flag**：`8===57CzBLKaEq2N8YBFRu31===D~~`
+
+### 任务 0x22 · lucia：十六进制还原
+
+> **任务描述**：用户 lucia 在保存她的密码时很有创意。
+
+`cat hi` 看到的是一段十六进制转储，用 `xxd -r` 反向还原成原始字符串：
+
+```bash
+eloise@venus:~$ cat hi
+00000000: 7576 4d77 4644 5172 5157 504d 6547 500a
+eloise@venus:~$ xxd -r hi
+uvMwFDQrQWPMeGP
+```
+
+切换到 lucia：
+
+```bash
+eloise@venus:~$ su lucia
+```
+
+```bash
+lucia@venus:~$ cat flagz.txt
+8===5Sr2pqeVTmn8RaaPmTPE===D~~
+```
+
+> **本关 flag**：`8===5Sr2pqeVTmn8RaaPmTPE===D~~`
+
+### 任务 0x23 · isabel：遍历字典找文件
+
+> **任务描述**：用户 isabel 把她的密码放在了 /etc/xdg 文件夹里的一个文件中，但她不记得文件名。不过，她有一个 dict.txt 文件可以帮助她回忆。
+
+`dict.txt` 里是一串可能存在的文件名，写个循环依次拼接成路径检查 `/etc/xdg` 下是否存在：
+
+```bash
+lucia@venus:/etc/xdg$ for f in $(cat /pwned/lucia/dict.txt | grep -v '^$'); do [ -f "$f" ] && echo "Found: $f" && cat "$f"; done
+Found: readme
+H5ol8Z2mrRsorC0
+```
+
+切换到 isabel：
+
+```bash
+lucia@venus:/etc/xdg$ su isabel
+```
+
+```bash
+isabel@venus:~$ cat flagz.txt
+8===Md2CU83GtVfouhm9U0AS===D~~
+```
+
+> **本关 flag**：`8===Md2CU83GtVfouhm9U0AS===D~~`
+
+### 任务 0x24 · freya：找出唯一不重复的字符串
+
+> **任务描述**：用户 freya 的密码是 different.txt 文件中唯一没有重复出现的字符串。
+
+`uniq -u` 只输出没有重复的行，直接得到密码：
+
+```bash
+isabel@venus:~$ sort different.txt | uniq -u
+EEDyYFDwYsmYawj
+```
+
+切换到 freya：
+
+```bash
+isabel@venus:~$ su freya
+```
+
+```bash
+freya@venus:~$ cat flagz.txt
+8===m1rRSv2pdm3sBGmgidul===D~~
+```
+
+> **本关 flag**：`8===m1rRSv2pdm3sBGmgidul===D~~`
+
+## 五、任务 25–32：Web 与网络
+
+### 任务 0x25 · alexa：定时出现的文件
+
+> **任务描述**：用户 alexa 每分钟都会把她的密码放入 /free 文件夹中的一个 .txt 文件中，然后马上删除它。
+
+密码文件会被定时创建又立刻删除，所以写个循环每秒轮询一次 `/free` 目录，抓到文件出现的一瞬间：
+
+```bash
+freya@venus:~$ while true; do
+    ls -la /free/
+    cat /free/*.txt 2>/dev/null
+    sleep 1
+done
+total 8
+drwxrwxr-x 1 executor executor 4096 Aug 28 11:21 .
+drwxr-xr-x 1 root     root     4096 Jun 14 21:08 ..
+...
+mxq9O3MSxxX9Q3S
+```
+
+轮询几次后抓到了密码 `mxq9O3MSxxX9Q3S`，切换到 alexa：
+
+```bash
+freya@venus:~$ su alexa
+```
+
+```bash
+alexa@venus:~$ cat flagz.txt
+8===12ALP3eLlJ1GrTBxwJQM===D~~
+```
+
+> **本关 flag**：`8===12ALP3eLlJ1GrTBxwJQM===D~~`
+
+### 任务 0x26 · ariel：HTTP 访问
+
+> **任务描述**：用户 ariel 的密码在线！（HTTP）
+
+直接请求本机的 HTTP 服务：
+
+```bash
+alexa@venus:~$ curl http://127.0.0.1
+33EtHoz9a0w2Yqo
+```
+
+切换到 ariel：
+
+```bash
+alexa@venus:~$ su ariel
+```
+
+```bash
+ariel@venus:~$ cat flagz.txt
+8===lqTeJ1msxhNjNJCptxmZ===D~~
+```
+
+> **本关 flag**：`8===lqTeJ1msxhNjNJCptxmZ===D~~`
+
+### 任务 0x27 · lola：vim 交换文件恢复
+
+> **任务描述**：看起来 ariel 没有来得及保存 lola 的密码……幸好还有一个临时文件！
+
+目录下有一个 vim 残留的交换文件 `.goas.swp`。交换文件里保存着未落盘的编辑内容，用 `vim -r` 恢复查看，把内容另存为 `/tmp/dict.txt`：
+
+```bash
+ariel@venus:~$ vim -r .goas.swp
+# 内容包含可能的密码候选，另存为 /tmp/dict.txt 后退出（:w /tmp/dict.txt :q!）
+```
+
+然后写个脚本把每个候选依次拿去 `su lola` 试，直到成功：
+
+```bash
+ariel@venus:~$ while IFS= read -r line; do echo $line | timeout 2 su lola 2>/dev/null; if [ $? -eq 0 ]; then echo $line; break; fi; done < /tmp/dict.txt
+d3LieOzRGX5wud6
+```
+
+切换到 lola：
+
+```bash
+ariel@venus:~$ su lola
+```
+
+```bash
+lola@venus:~$ cat flagz.txt
+8===TMYRw853hx8yKRocFMgM===D~~
+```
+
+> **本关 flag**：`8===TMYRw853hx8yKRocFMgM===D~~`
+
+### 任务 0x28 · celeste：遍历 .html 页面列表
+
+> **任务描述**：用户 celeste 留下了一个可能的 .html 页面名称列表，从中可以找到她的密码。
+
+`pages.txt` 里是候选页面名，依次请求并过滤掉返回的 HTML 标签，只留真实内容：
+
+```bash
+lola@venus:~$ while IFS= read -r line; do curl -s http://127.0.0.1/$line.html; done < pages.txt 2>/dev/null | grep -v '<'
+VLSNMTKwSV2o8Tn
+```
+
+切换到 celeste：
+
+```bash
+lola@venus:~$ su celeste
+```
+
+```bash
+celeste@venus:~$ cat flagz.txt
+8===TrdsvMy99slFZtd4Cy4Q===D~~
+```
+
+> **本关 flag**：`8===TrdsvMy99slFZtd4Cy4Q===D~~`
+
+### 任务 0x29 · nina：MySQL 数据库
+
+> **任务描述**：用户 celeste 可以访问 MySQL，但用来做什么呢？
+
+用 celeste 的身份连接 MySQL，翻翻数据库里的内容：
+
+```bash
+celeste@venus:~$ mysql -uceleste -p
+mysql> show databases;
+mysql> use venus;
+mysql> show tables;
+mysql> select * from people;
+```
+
+结果如下：
+
+```text
+nina | ixpeqdWuvC5N9kG
+```
+
+`people` 表里直接存着下一个用户 nina 和她的密码，切换到 nina：
+
+```bash
+celeste@venus:~$ su nina
+```
+
+```bash
+nina@venus:~$ cat flagz.txt
+8===VwICIymoA1DczWJau1sG===D~~
+```
+
+> **本关 flag**：`8===VwICIymoA1DczWJau1sG===D~~`
+
+### 任务 0x30 · kira：HTTP 请求方法
+
+> **任务描述**：用户 kira 在 http://localhost/method.php 中隐藏了某些东西。
+
+页面提示 "I dont like this method!"，说明它只接受特定的 HTTP 方法。逐个尝试：
+
+```bash
+nina@venus:~$ curl http://localhost/method.php
+
+I dont like this method!
+nina@venus:~$ curl -X GET http://localhost/method.php
+
+I dont like this method!
+nina@venus:~$ curl -X POST http://localhost/method.php
+
+I dont like this method!
+nina@venus:~$ curl -X OPTIONS http://localhost/method.php
+
+I dont like this method!
+nina@venus:~$ curl -X PUT http://localhost/method.php
+
+tPlqxSKuT4eP3yr
+```
+
+换用 `PUT` 方法就拿到了密码，切换到 kira：
+
+```bash
+nina@venus:~$ su kira
+```
+
+```bash
+kira@venus:~$ cat flagz.txt
+8===rJun2WyeuGIvabWQvJko===D~~
+```
+
+> **本关 flag**：`8===rJun2WyeuGIvabWQvJko===D~~`
+
+### 任务 0x31 · veronica：User-Agent 头
+
+> **任务描述**：用户 veronica 经常访问 http://localhost/waiting.php
+
+用 `curl -v` 查看页面响应，页面提示它在等一个特定的 User-Agent：
+
+```bash
+kira@venus:~$ curl -v http://localhost/waiting.php
+* Host localhost:80 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:80...
+* Connected to localhost (::1) port 80
+* using HTTP/1.x
+> GET /waiting.php HTTP/1.1
+> Host: localhost
+> User-Agent: curl/8.14.1
+> Accept: */*
+>
+* Request completely sent off
+< HTTP/1.1 200 OK
+< Server: nginx
+< Date: Fri, 28 Aug 2026 11:46:33 GMT
+< Content-Type: text/html; charset=UTF-8
+< Transfer-Encoding: chunked
+< Connection: keep-alive
+<
+
+Im waiting for the user-agent PARADISE.
+* Connection #0 to host localhost left intact
+```
+
+按提示把 User-Agent 改成 `PARADISE` 再请求：
+
+```bash
+kira@venus:~$ curl -A "PARADISE" http://localhost/waiting.php
+
+QTOel6BodTx2cwX
+```
+
+切换到 veronica：
+
+```bash
+kira@venus:~$ su veronica
+```
+
+```bash
+veronica@venus:~$ cat flagz.txt
+8===iSSeKzoDXsKy8WPuqNPg===D~~
+```
+
+> **本关 flag**：`8===iSSeKzoDXsKy8WPuqNPg===D~~`
+
+### 任务 0x32 · lana：bash 别名泄露
+
+> **任务描述**：用户 veronica 经常使用 lana 的密码，所以她为此创建了一个别名（alias）。
+
+在 `~/.bashrc` 里搜索别名，果然发现一个可疑的 `lanapass`：
+
+```bash
+veronica@venus:~$ cat ~/.bashrc | grep alias
+# enable color support of ls and also add handy aliases
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
+    #alias grep='grep --color=auto'
+    #alias fgrep='fgrep --color=auto'
+    #alias egrep='egrep --color=auto'
+# some more ls aliases
+#alias ll='ls -l'
+#alias la='ls -A'
+#alias l='ls -CF'
+# ~/.bash_aliases, instead of adding them here directly.
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+alias lanapass='echo "UWbc0zNEVVops1v"'
+```
+
+别名 `lanapass` 就是 lana 的密码，切换到 lana：
+
+```bash
+veronica@venus:~$ su lana
+```
+
+```bash
+lana@venus:~$ cat flagz.txt
+8===um3Hno2AsjFjuLWsfmDj===D~~
+```
+
+> **本关 flag**：`8===um3Hno2AsjFjuLWsfmDj===D~~`
+
+## 六、任务 33–41：综合技巧
+
+### 任务 0x33 · noa：压缩包里的密码
+
+> **任务描述**：用户 noa 喜欢压缩她的东西。
+
+```bash
+lana@venus:~$ cat zip.gz
+pwned/lana/zip0000644000000000000000000000002015176046575012341 0ustar  rootroot9WWOPoeJrq6ncvJ
+```
+
+`zip.gz` 其实是一个经过压缩打包的 tar 归档（开头能看到 `ustar` 头），解压后拿到 noa 的密码 `9WWOPoeJrq6ncvJ`，切换到 noa：
+
+```bash
+lana@venus:~$ su noa
+```
+
+```bash
+noa@venus:~$ cat flagz.txt
+8===HUNGevKdeKwcCvJru1CC===D~~
+```
+
+> **本关 flag**：`8===HUNGevKdeKwcCvJru1CC===D~~`
+
+### 任务 0x34 · maia：strings 提取字符串
+
+> **任务描述**：用户 maia 的密码被垃圾信息包围着。
+
+二进制文件里的可读字符串用 `strings` 提取，再过滤掉太短的行：
+
+```bash
+noa@venus:~$ strings trash | grep -E '^.{15,}$'
+h1hnDPHpydEjoEN
+```
+
+切换到 maia：
+
+```bash
+noa@venus:~$ su maia
+```
+
+```bash
+maia@venus:~$ cat flagz.txt
+8===nu8IDScKFAXVcnFutKtG===D~~
+```
+
+> **本关 flag**：`8===nu8IDScKFAXVcnFutKtG===D~~`
+
+### 任务 0x35 · gloria：暴力破解末两位
+
+> **任务描述**：用户 gloria 忘记了她密码的最后两个字符……她只记得那是两个小写字母。
+
+密码文件里最后两位是 `??`：
+
+```bash
+maia@venus:~$ cat forget
+v7xUVE2e5bjUc??
+```
+
+末两位是小写字母，一共只有 `26 × 26 = 676` 种组合，用两层循环生成全部候选：
+
+```bash
+maia@venus:~$ for a in {a..z}; do for b in {a..z}; do echo "v7xUVE2e5bjUc$a$b" >> pass; done; done
+```
+
+逐个尝试登录，最终爆破出完整密码：
+
+```text
+login: gloria   password: v7xUVE2e5bjUcxw
+```
+
+切换到 gloria：
+
+```bash
+maia@venus:~$ su gloria
+```
+
+```bash
+gloria@venus:~$ cat flagz.txt
+8===RZIkEtaEp18tLslTopJj===D~~
+```
+
+> **本关 flag**：`8===RZIkEtaEp18tLslTopJj===D~~`
+
+### 任务 0x36 · alora：二维码扫描
+
+> **任务描述**：用户 alora 喜欢画画，所以她将密码保存为……
+
+`image` 文件是一幅用字符拼成的二维码：
+
+```text
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+########              ##########  ##              ########
+########  ##########  ##    ##  ####  ##########  ########
+########  ##      ##  ##  ##  ######  ##      ##  ########
+########  ##      ##  ####  ########  ##      ##  ########
+########  ##      ##  ##        ####  ##      ##  ########
+########  ##########  ##        ####  ##########  ########
+########              ##  ##  ##  ##              ########
+########################  ####  ##########################
+########    ##  ####    ####  ##  ##      ##    ##########
+############    ######  ##    ##      ##          ########
+########    ##    ##  ##  ##            ####  ##  ########
+##############      ##  ##    ######  ##    ####  ########
+############    ##      ##  ########    ##  ##  ##########
+########################    ####    ##  ##  ####  ########
+########              ##    ####            ##  ##########
+########  ##########  ######  ##########  ####  ##########
+########  ##      ##  ####  ##      ######        ########
+########  ##      ##  ##    ##  ######  ##  ####  ########
+########  ##      ##  ####          ##    ##  ##  ########
+########  ##########  ##      ####  ##  ##################
+########              ##  ##                    ##########
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+```
+
+用二维码扫描工具扫一下：
+
+```text
+扫描二维码得到：mhrTFCoxGoqUxtw
+```
+
+切换到 alora：
+
+```bash
+gloria@venus:~$ su alora
+```
+
+```bash
+alora@venus:~$ cat flagz.txt
+8===NSe78N2lM7IbvHzvrC0G===D~~
+```
+
+> **本关 flag**：`8===NSe78N2lM7IbvHzvrC0G===D~~`
+
+### 任务 0x37 · julie：ISO 镜像里的密码
+
+> **任务描述**：用户 julie 创建了一个包含她密码的 ISO 镜像文件。
+
+用 `strings` 提取 ISO 里的可读内容，密码就在其中：
+
+```bash
+alora@venus:~$ strings music.iso
+CD001
+LINUX                           CDROM
+...
+MUSIC.ZIP;1RR
+music.zipPX$
+RRIP_1991ATHE ROCK RIDGE INTERCHANGE PROTOCOL PROVIDES SUPPORT FOR POSIX FILE SYSTEM SEMANTICSPLEASE CONTACT DISC PUBLISHER FOR SPECIFICATION SOURCE.  SEE PUBLISHER IDENTIFIER IN PRIMARY VOLUME DESCRIPTOR FOR CONTACT INFORMATION.
+pwned/alora/music.txtUT
+sjDf4i2MSNgSvOv
+pwned/alora/music.txtUT
+```
+
+在 ISO 的文件记录里看到 `music.txt` 的内容 `sjDf4i2MSNgSvOv`，切换到 julie：
+
+```bash
+alora@venus:~$ su julie
+```
+
+```bash
+julie@venus:~$ cat flagz.txt
+8===Iwe1QpxTcx0A8Uusqjfe===D~~
+```
+
+> **本关 flag**：`8===Iwe1QpxTcx0A8Uusqjfe===D~~`
+
+### 任务 0x38 · irene：diff 比较差异
+
+> **任务描述**：用户 irene 认为美丽在于差异。
+
+比较两个文件，找出不同之处：
+
+```bash
+julie@venus:~$ diff 1.txt 2.txt
+174c174
+< 8VeRLEFkBpe2DSD
+---
+> aNHRdohjOiNizlU
+```
+
+两个文件只有第 174 行不同，两行都试试，`8VeRLEFkBpe2DSD` 是正确答案，切换到 irene：
+
+```bash
+julie@venus:~$ su irene
+```
+
+```bash
+irene@venus:~$ cat flagz.txt
+8===c9hgLkLGzsNw7mB3VEr4===D~~
+```
+
+> **本关 flag**：`8===c9hgLkLGzsNw7mB3VEr4===D~~`
+
+### 任务 0x39 · adela：OpenSSL 解密
+
+> **任务描述**：用户 adela 把她的密码借给了 irene。
+
+目录里有私钥 `id_rsa.pem` 和密文 `pass.enc`，用 OpenSSL 解密：
+
+```bash
+irene@venus:~$ openssl pkeyutl -decrypt -inkey id_rsa.pem -in pass.enc
+nbhlQyKuaXGojHx
+```
+
+切换到 adela：
+
+```bash
+irene@venus:~$ su adela
+```
+
+```bash
+adela@venus:~$ cat flagz.txt
+8===86XGXQefUeV2eEdrUzxx===D~~
+```
+
+> **本关 flag**：`8===86XGXQefUeV2eEdrUzxx===D~~`
+
+### 任务 0x40 · sky：摩斯密码
+
+> **任务描述**：用户 sky 把她的密码保存在某种可以听到的东西里。
+
+"可以听到的东西"暗示摩斯密码。`wtf` 文件里正是摩斯码：
+
+```bash
+adela@venus:~$ cat wtf
+.--. .- .--. .- .--. .- .-. .- -.. .. ... .
+```
+
+摩斯解码：
+
+```text
+papaparadise
+```
+
+切换到 sky：
+
+```bash
+adela@venus:~$ su sky
+```
+
+```bash
+sky@venus:~$ cat flagz.txt
+8===8T2IE4fNIvbs8sh1lnew===D~~
+```
+
+> **本关 flag**：`8===8T2IE4fNIvbs8sh1lnew===D~~`
+
+### 任务 0x41 · sarah：自定义请求头
+
+> **任务描述**：用户 sarah 在 http://localhost/key.php 中使用了 header。
+
+用 `curl -v` 先看响应，页面提示需要某个 header：
+
+```bash
+sky@venus:~$ curl -v http://localhost/key.php
+* Host localhost:80 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:80...
+* Connected to localhost (::1) port 80
+* using HTTP/1.x
+> GET /key.php HTTP/1.1
+> Host: localhost
+> User-Agent: curl/8.14.1
+> Accept: */*
+>
+* Request completely sent off
+< HTTP/1.1 200 OK
+< Server: nginx
+< Date: Fri, 28 Aug 2026 12:18:23 GMT
+< Content-Type: text/html; charset=UTF-8
+< Transfer-Encoding: chunked
+< Connection: keep-alive
+<
+
+Key header is true?
+* Connection #0 to host localhost left intact
+```
+
+按提示加上 `Key: true` 请求头：
+
+```bash
+sky@venus:~$ curl -H "Key: true" http://localhost/key.php
+
+LWOHeRgmIxg7fuS
+```
+
+切换到 sarah：
+
+```bash
+sky@venus:~$ su sarah
+```
+
+```bash
+sarah@venus:~$ cat flagz.txt
+8===nLCR949OMr4pLhMepKCM===D~~
+```
+
+> **本关 flag**：`8===nLCR949OMr4pLhMepKCM===D~~`
+
+## 七、任务 42–51：进阶挑战与通关
+
+### 任务 0x42 · mercy：隐藏文件 `...`
+
+> **任务描述**：用户 mercy 的密码隐藏在这个目录中。
+
+目录里藏着一个名字就是三个点的隐藏文件 `...`，直接读取：
+
+```bash
+sarah@venus:~$ cat ...
+ym5yyXZ163uIS8L
+```
+
+切换到 mercy：
+
+```bash
+sarah@venus:~$ su mercy
+```
+
+```bash
+mercy@venus:~$ cat flagz.txt
+8===pBpnZCBSELaY0xQJ8YAY===D~~
+```
+
+> **本关 flag**：`8===pBpnZCBSELaY0xQJ8YAY===D~~`
+
+### 任务 0x43 · paula：bash 历史记录
+
+> **任务描述**：用户 mercy 总是把 paula 的密码弄错。
+
+查看 shell 历史记录，`su paula` 后面紧跟的应该就是密码：
+
+```bash
+mercy@venus:~$ cat .bash_history
+ls -A
+ls
+rm /
+ps
+sudo -l
+watch tv
+vi /etc/logs
+su paula
+dlHZ6cvX6cLuL8p
+history
+history -c
+logout
+ssh paula@localhost
+cat .
+ls
+ls -l
+
+su paula
+dlHZ6cvX6cLuL8p
+```
+
+历史里出现了两次 `su paula` + `dlHZ6cvX6cLuL8p`，密码就是它，切换到 paula：
+
+```bash
+mercy@venus:~$ su paula
+```
+
+```bash
+paula@venus:~$ cat flagz.txt
+8===2pwlvMk65rw81lymKLJE===D~~
+```
+
+> **本关 flag**：`8===2pwlvMk65rw81lymKLJE===D~~`
+
+### 任务 0x44 · karla：按属组查找
+
+> **任务描述**：用户 karla 信任我，她是我朋友圈中的一员。
+
+"朋友圈"暗示用**属组**（group）来查找，用 `find` 的 `-group` 参数：
+
+```bash
+paula@venus:~$ find / -group hidden -type f 2>/dev/null
+/usr/src/.karl-a
+paula@venus:~$ cat /usr/src/.karl-a
+gYAmvWY3I7yDKRf
+```
+
+切换到 karla：
+
+```bash
+paula@venus:~$ su karla
+```
+
+```bash
+karla@venus:~$ cat flagz.txt
+8===SARQC95X3AWK9K4BBTMJ===D~~
+```
+
+> **本关 flag**：`8===SARQC95X3AWK9K4BBTMJ===D~~`
+
+### 任务 0x45 · denise：图片元数据
+
+> **任务描述**：用户 denise 把她的密码保存在图片里。
+
+用 `exiftool` 查看图片元数据，密码藏在 XMP 的 `About` 字段里：
+
+```bash
+karla@venus:~$ exiftool yuju.jpg
+ExifTool Version Number         : 13.25
+File Name                       : yuju.jpg
+Directory                       : .
+File Size                       : 33 kB
+...
+File Type                       : JPEG
+...
+Artist                          : sML
+Date/Time Original              : 2021:11:01 10:34:51
+...
+About                           : pFg92DpGucMWccA
+Creator                         : sML
+...
+```
+
+密码 `pFg92DpGucMWccA`，切换到 denise：
+
+```bash
+karla@venus:~$ su denise
+```
+
+```bash
+denise@venus:~$ cat flagz.txt
+8===uMXbjLdQde2iQFoWc8zf===D~~
+```
+
+> **本关 flag**：`8===uMXbjLdQde2iQFoWc8zf===D~~`
+
+### 任务 0x46 · zora：doas 切换用户
+
+> **任务描述**：用户 zora 一直在喊"doas!"
+
+系统装了 `doas`（sudo 的替代品），直接用 doas 以 zora 身份启动 shell，密码就是 denise 自己的密码：
+
+```bash
+denise@venus:~$ doas -u zora /bin/bash
+doas (denise@venus) password:
+zora@venus:/pwned/denise$
+```
+
+输入 `pFg92DpGucMWccA` 后成功切换：
+
+```bash
+zora@venus:~$ cat flagz.txt
+8===hhp0gFTIaedSX3faXDqP===D~~
+zora@venus:~$ cat zora_pass.txt
+BWm1R3jCcb53riO
+```
+
+> **本关 flag**：`8===hhp0gFTIaedSX3faXDqP===D~~`
+
+### 任务 0x47 · belen：venus.hmv 网站
+
+> **任务描述**：用户 belen 把她的密码留在了 venus.hmv 文件中。
+
+`venus.hmv` 是本机的一个站点，直接请求：
+
+```bash
+zora@venus:~$ curl -i -s venus.hmv
+HTTP/1.1 200 OK
+Server: nginx
+Date: Fri, 28 Aug 2026 12:31:53 GMT
+Content-Type: text/html
+Content-Length: 16
+Last-Modified: Mon, 04 May 2026 07:40:45 GMT
+Connection: keep-alive
+ETag: "69f84d7d-10"
+Accept-Ranges: bytes
+
+2jA0E8bQ4WrGwWZ
+```
+
+切换到 belen：
+
+```bash
+zora@venus:~$ su belen
+```
+
+```bash
+belen@venus:~$ cat flagz.txt
+8===FzDIkqJtVgyQYfRVGH1r===D~~
+```
+
+> **本关 flag**：`8===FzDIkqJtVgyQYfRVGH1r===D~~`
+
+### 任务 0x48 · leona：破解被偷的密码哈希
+
+> **任务描述**：看起来 belen 偷了用户 leona 的密码……
+
+`stolen.txt` 里是一个 MD5 加密的密码哈希：
+
+```bash
+belen@venus:~$ cat stolen.txt
+$1$leona$lhWp56YnWAMz6z32Bw53L0
+```
+
+下载到本地用 john + rockyou 字典爆破：
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ echo '$1$leona$lhWp56YnWAMz6z32Bw53L0' > hash.txt
+
+┌──(kali㉿kali)-[~]
+└─$ john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
+Warning: detected hash type "md5crypt", but the string is also recognized as "md5crypt-long"
+Use the "--format=md5crypt-long" option to force loading these as that type instead
+Using default input encoding: UTF-8
+Loaded 1 password hash (md5crypt, crypt(3) $1$ (and variants) [MD5 256/256 AVX2 8x3])
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+freedom          (?)
+1g 0:00:00:00 DONE (2026-08-28 08:35) 25.00g/s 9600p/s 9600c/s 9600C/s 123456..michael1
+Use the "--show" option to display all of the cracked passwords reliably
+```
+
+密码是 `freedom`，切换到 leona：
+
+```bash
+belen@venus:~$ su leona
+```
+
+```bash
+leona@venus:~$ cat flagz.txt
+8===jObs3nfIJG4dDtxhWuKg===D~~
+```
+
+> **本关 flag**：`8===jObs3nfIJG4dDtxhWuKg===D~~`
+
+### 任务 0x49 · ava：DNS TXT 记录
+
+> **任务描述**：用户 ava 最近经常摆弄 venus.hmv 的 DNS……
+
+DNS 记录里藏着信息，查看 `venus.hmv` 的 zone 文件：
+
+```bash
+leona@venus:~$ cd /etc/bind
+leona@venus:/etc/bind$ cat db.venus.hmv
+
+; BIND data file for local loopback interface
+;
+    604800
+@       IN      SOA     ns1.venus.hmv. root.venus.hmv. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+
+;@      IN      NS      localhost.
+;@      IN      A       127.0.0.1
+;@      IN      AAAA    ::1
+@       IN      NS      ns1.venus.hmv.
+
+;IP address of Name Server
+
+ns1     IN      A       127.0.0.1
+ava IN      TXT     oCXBeeEeYFX34NU
+```
+
+zone 文件里 `ava` 的 TXT 记录就是密码 `oCXBeeEeYFX34NU`，切换到 ava：
+
+```bash
+leona@venus:/etc/bind$ su ava
+```
+
+```bash
+ava@venus:~$ cat flagz.txt
+8===7XsGiUHUZNouh6K6CyY2===D~~
+```
+
+> **本关 flag**：`8===7XsGiUHUZNouh6K6CyY2===D~~`
+
+### 任务 0x50 · maria：回忆之前的摩斯密码
+
+> **任务描述**：用户 maria 的密码在某处……
+
+提示"是之前的摩斯密码"——正是任务 0x40 里 sky 那个 `wtf` 文件的摩斯码：
+
+```text
+.--. .- .--. .- .--. .- .-. .- -.. .. ... .
+```
+
+解码得 `papaparadise`，用它登录 maria：
+
+```bash
+ava@venus:~$ su maria
+```
+
+```bash
+maria@venus:~$ cat flagz.txt
+8===ZLNu1CHYSYf0PvkK2iqS===D~~
+```
+
+> **本关 flag**：`8===ZLNu1CHYSYf0PvkK2iqS===D~~`
+
+### 任务 0x51 · 通关
+
+> **任务描述**：恭喜！（Congrats!）
+
+最后一个任务就是祝贺语，Venus 靶机全部通关！
+
+```bash
+maria@venus:~$ cat mission.txt
+################
+# MISSION 0x51 #
+################
+
+## EN ##
+Congrats!
+
+## ES ##
+Felicidades :)
+```
+
+## 总结
+
+Venus 作为 HMVLabs 第一章，用 51 个由浅入深的任务把 Linux 基础操作串了一遍：
+
+- **文件查找**：`find`（按名称、大小 `-size`、属主 `-user`、属组 `-group`、修改时间 `-mtime`）、`whereis`
+- **文本处理**：`grep`（行首 `^` / 行尾 `$`）、`sed`（指定行、正则提取）、`cut`、`sort` + `uniq`（去重 / 找重复）
+- **编码解码**：Base64、十六进制（`xxd -r`）、摩斯密码、QR 码、图片隐写（`strings` / `exiftool`）、ISO / zip / tar 压缩包
+- **权限利用**：`sudo`、`doas`、SSH 私钥登录、vim 交换文件恢复、bash 历史泄露
+- **Web 相关**：HTTP 请求方法（PUT）、User-Agent、自定义 Header、本地 Web 服务、MySQL、DNS TXT 记录
+- **密码破解**：`zip2john` + `john` 爆破 zip、`john` 爆破 MD5 哈希、枚举暴力破解
+
+拿下全部 51 关 flag 后，HMVLabs 第一章 Venus 就正式通关了。Hack & Fun！
