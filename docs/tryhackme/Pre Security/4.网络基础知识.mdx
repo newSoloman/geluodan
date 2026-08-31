@@ -1,0 +1,111 @@
+---
+title: 4. 网络基础知识
+sidebar_position: 4
+---
+
+# 网络基础知识
+
+本篇是 TryHackMe Pre Security 学习路径的第四篇笔记，把视野从单台电脑扩展到"一堆电脑连在一起"——认识什么是网络、局域网里有哪些设备、数据在网络上是如何分层传递的，最后看看怎样把网络延伸到更大的范围。
+
+## 一、什么是 networking？
+
+简单来说，**网络（Network）** 就是把多台电脑、服务器、网络设备（交换机、路由器、防火墙）以及手机等其它设备连接在一起，让它们互相共享数据的系统（*A network is a group of connected devices that share data*）。家里的路由器连着电脑和手机，学校的机房，乃至 Netflix 靠互联网把视频送到你屏幕上，背后都是网络。
+
+**互联网（The Internet）**：一个由无数小网络互相连接而成的"网络的网络"（*A large network of networks*），覆盖全球。它也是一种**广域网（Wide Area Network，WAN）**，具体区别在下一节展开。
+
+要在网络里通信，每台设备都必须有一个独一无二的"身份标识"：
+
+- **IP 地址（IP Address）**：逻辑地址，负责"定位"设备在网络中的位置。IPv4 是 32 位，写成四组数字，如 `192.168.1.1`；IPv6 是 128 位，写成八组十六进制，用来解决 IPv4 地址不够用的问题。IP 地址负责帮你找到"目标在哪张网"，路由器据此转发数据。
+- **MAC 地址（MAC Address）**：物理地址，出厂时烧录在网卡的硬件地址（*It is the physical address that is burned into the network interface card at the factory*），一般写成六组十六进制，如 `00:1A:2B:3C:4D:5E`。它全球唯一、不会改变，负责在同一局域网内"找到具体的那台设备"。
+
+**Ping**：利用 **ICMP（Internet Control Message Protocol，互联网控制报文协议）** 向目标主机发送探测数据包，测试它是否在线、网络是否通畅。在命令行输入 `ping 目标IP或域名`，能看到目标回复的延迟时间（TTL）等信息。
+
+## 二、局域网入门
+
+**局域网（Local Area Network，LAN）**：覆盖范围有限（比如家里、办公室、一层楼）的私有网络。相比于互联网，它速度更快、延迟更低。我们平时用的 Wi-Fi 和有线网络，大多数都是局域网。
+
+局域网里最常见的几个设备：
+
+| 设备 | 作用 |
+|------|------|
+| 交换机（Switch） | 在局域网内部转发数据，根据 MAC 地址把数据送到正确的设备。它**不能**连接不同网络（如本地网络和互联网） |
+| 路由器（Router） | 在不同网络之间转发数据的设备，根据 IP 地址寻路。连接局域网和互联网的"大门"就是它 |
+| 集线器（Hub） | 交换机的"原始版"，收到数据会向所有端口广播，效率低、安全性差，已基本淘汰 |
+| 调制解调器（Modem） | 把家里的数字信号和电话线/光纤传输的模拟信号互相转换的"翻译官" |
+
+局域网之外，还有按覆盖范围划分的另外两种网络：
+
+**城域网（Metropolitan Area Network，MAN）**：覆盖一座城市范围的网络，比如把整个城市的政府机构网络连起来（*A MAN is used to connect networks within a city*）。
+
+**广域网（Wide Area Network，WAN）**：覆盖范围横跨省、国家甚至全球的网络。互联网本身就是全球最大的广域网，互联网服务提供商（ISP）就是靠广域网把各地的网络连接起来，用户才能上网。
+
+局域网里的设备怎么连、连成什么形状，就是**网络拓扑（Topology）**。最常见的两种：
+
+- **星型拓扑（Star Topology）**：所有设备都连到一台中心设备（如交换机）上。好处是一根线断了只影响那台设备；坏处是中心设备一挂，整个网络瘫痪（*The main disadvantage is that if the central device fails, the whole network goes down*）。
+- **总线型拓扑（Bus Topology）**：所有设备共用一条主干线缆，线缆两端有终结器。节省线材，但一台设备出问题可能影响整条总线，且同一时刻只能有一台设备发送数据（*only one device can send data at a time*）。
+- **环型拓扑（Ring Topology）**：设备一个接一个连成闭合的环，数据沿环单向传递。此外还有网状（Mesh）、树型（Tree）、混合型（Hybrid）等。
+
+## 三、OSI 模型
+
+两台设备通信时，数据不是"嗖"一下直接过去，而是被分成一层一层来处理的。**OSI 模型（开放系统互连模型，Open Systems Interconnection model）** 就是一套把网络通信过程划分为 **7 层** 的标准参考模型，从下到上分别是：
+
+| 层 | 名称 | 作用与典型协议/设备 |
+|----|------|---------------------|
+| 7 | 应用层（Application） | 直接为用户程序提供网络服务，如 HTTP、DNS、SMTP、FTP（*allows computer programs to communicate with the network*） |
+| 6 | 表示层（Presentation） | 数据格式的转换、加密与压缩，保证不同系统能互相读懂（*the "translation" layer for data, handles encryption and compression*） |
+| 5 | 会话层（Session） | 建立、管理与终止两台设备之间的"会话"（连接）（*establishes, manages, and terminates sessions*） |
+| 4 | 传输层（Transport） | 提供端到端的数据传输，负责可靠性与流量控制。协议：TCP、UDP |
+| 3 | 网络层（Network） | 逻辑寻址与路由，决定数据从源到目的地走哪条路。协议：IP |
+| 2 | 数据链路层（Data Link） | 帧的封装与转发，用 MAC 地址在同一网络内传输。设备：交换机 |
+| 1 | 物理层（Physical） | 电信号、光信号在网线、光纤等物理介质上的传输。设备：网卡、集线器 |
+
+记忆时常用的英文口诀是 **"Please Do Not Throw Sausage Pizza Away"**（请勿扔掉香肠披萨），每个单词首字母从上到下对应 7、6、5、4、3、2、1 层。
+
+理解 OSI 模型的关键：数据发送时从第 7 层一路"往下"传到第 1 层，每经过一层就套上一层该层的"头部"；接收端再从第 1 层一路"往上"逐层剥掉，还原出原始数据。
+
+## 四、数据包和帧
+
+上一节的 OSI 模型是教学用的理想模型，实际互联网使用的是一套更精简的 **TCP/IP 模型**，只分 4 层：
+
+1. **应用层（Application）**：对应 OSI 的 5、6、7 层，承载 HTTP、DNS 等应用协议
+2. **传输层（Transport）**：对应 OSI 的第 4 层，TCP/UDP 在这里工作
+3. **网络层（Internet）**：对应 OSI 的第 3 层，IP 在这里工作
+4. **网络接口层（Network Interface）**：对应 OSI 的第 1、2 层，处理物理传输
+
+数据在传输层被打包成 **数据段（Segment）**，到网络层变成 **数据包（Packet）**，再到数据链路层外面再裹一层头尾，变成 **帧（Frame）**。
+
+**数据包（Packet）** 里装着什么？核心字段包括：源地址和目标地址（*source and destination address*）、**TTL（Time To Live，生存时间）**（数据包最多能经过多少台路由器，防止数据在网络里无限转圈）、**校验和（Checksum）**（用于检查数据在传输中是否损坏）等。数据包里装的"货物"叫 **载荷（Payload）**。
+
+**帧（Frame）**：数据包到达数据链路层后，会加上包含源/目标 MAC 地址的帧头和帧尾（含 CRC 校验），形成一帧一帧的数据。可以理解为：数据包是"信纸"，帧是套在信纸外面的"信封"，信封上写的是局域网内收发设备的 MAC 地址。
+
+传输层有两个"性格截然不同"的兄弟协议：
+
+- **TCP（Transmission Control Protocol，传输控制协议）**：**可靠、面向连接**。发送数据前先建立连接，这个建连过程叫 **三次握手（Three-Way Handshake）**：客户端发 `SYN` → 服务器回 `SYN-ACK` → 客户端回 `ACK`，之后才开始传数据。TCP 保证数据不丢、不重、不乱序，适合网页、邮件、文件传输。
+- **UDP（User Datagram Protocol，用户数据报协议）**：**不可靠、无连接**。不做握手、不确认、不重传，就是"扔出去不管"。速度快、开销小，适合对丢失不敏感的场景，如在线视频、语音通话、DNS 查询。
+
+不管是 TCP 还是 UDP，都要靠**端口（Port）** 把数据送到服务器上正确的应用程序。端口号范围 0~65535，常用端口有 HTTP 80、HTTPS 443、SSH 22、DNS 53 等（*HTTP uses port 80, HTTPS uses 443, SSH uses 22, and DNS uses 53*）。
+
+## 五、拓展你的网络
+
+网络知识掌握到一定程度，就要面对几个"进阶问题"：家里内网的服务怎么让外网访问？防火墙怎么决定放不放行？出差在外怎么安全地连回公司？
+
+### 1. 端口转发（Port Forwarding）
+
+家里的设备用的大多是私有 IP（如 `192.168.x.x`），外网无法直接访问。**端口转发**就是在路由器上设置一条规则：当外网访问"路由器公网 IP + 某个端口"时，路由器把流量转发给内网指定设备的指定端口（*It is when the router forwards a request from the internet to a specific device and port on the local network*）。这样你就能在外网访问家里的 Web 服务器、远程桌面等。
+
+### 2. 防火墙（Firewall）
+
+**防火墙** 是一台负责过滤进出网络流量的设备，按照预设的规则决定哪些数据允许通过、哪些必须拦截。按工作方式分为两类：
+
+- **有状态防火墙（Stateful Firewall）**：会"记住"连接的状态。对于已经建立连接的回程流量直接放行，只对新建连接按规则严格审查，更智能、更安全。
+- **无状态防火墙（Stateless Firewall）**：只看每个数据包自身的信息，逐个独立判断，不关心连接上下文，速度快但防护能力有限。
+
+### 3. VPN（虚拟专用网络）
+
+**VPN（Virtual Private Network，虚拟专用网络）**：在公共网络上通过**加密隧道（Tunneling）** 建立一条安全、私密的连接，让远程用户访问公司内部网络时，就像坐在公司办公室里一样（*It creates a secure, encrypted tunnel between your device and a remote network*）。员工出差在外连接公司内网、在公共 Wi-Fi 上保护自己上网数据，用的都是 VPN。
+
+> 注：VPN 只是加密隧道、把流量"搬"到远端，它本身不必然隐藏上网身份。与浏览器上常见的"VPN 插件"（实际多为代理）不是一个概念。
+
+### 4. VLAN（虚拟局域网）
+
+**VLAN（Virtual LAN，虚拟局域网）**：在一台物理交换机上，把端口划分成多个互相隔离的逻辑子网（*A VLAN splits a physical network into several isolated virtual networks*）。这样做的好处是减小广播域、提高安全性——不同部门（如财务、开发）即使插在同一台交换机上，也被逻辑隔开，无法直接互相访问。
