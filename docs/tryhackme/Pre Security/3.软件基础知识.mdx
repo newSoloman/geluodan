@@ -1,0 +1,140 @@
+---
+title: 3. 软件基础知识
+sidebar_position: 3
+---
+
+# 软件基础知识
+
+本篇是 TryHackMe Pre Security 学习路径的第三篇笔记，从最底层的数据表示与编码讲起，再接触几种最常见的编程语言和数据库查询语言，为以后自己写工具、读别人代码打下基础。
+
+## 一、数据表示
+
+数值在计算机内存中的表示和存储方式，核心是几种不同的"进制系统"（*In this room, we covered several topics related to how numeric values are represented and stored in computer memory. We covered the following systems*）：
+
+| 进制 | 基数 | 说明 |
+|------|------|------|
+| 十进制（Decimal） | 10 | 日常生活中使用的系统（*This is the system we use in our everyday life*） |
+| 二进制（Binary） | 2 | 计算机只理解两种状态，编码为 0 和 1（*Computers understand two states, which are encoded as 0 and 1*） |
+| 十六进制（Hexadecimal） | 16 | 每 4 个二进制位（bit）可以组合成一个十六进制数字，范围在 0 到 F 之间（*Every 4 binary digits (bits) can be grouped as one hexadecimal digit. A hexadecimal digit ranges between 0 and F*） |
+| 八进制（Octal） | 8 | 每 3 个二进制位可以组合成一个八进制数字，范围在 0 到 7 之间，在计算机系统中不太常见（*Every 3 binary digits (bits) can be grouped as one octal digit. An octal digit ranges between 0 and 7. This one is less commonly encountered on computer systems*） |
+
+此外，我们还学习了如何表示颜色（*Moreover, we learned how a color can be represented*）：
+
+**位（Bit）**：二进制数字（binary digit）的缩写，取值只有 0 或 1。
+
+**字节（Byte）**：现代系统中一个字节等于 8 位，也被称为八位字节（octet）。
+
+**十六进制颜色（Hex color）**：计算机系统中，颜色由红（Red）、绿（Green）、蓝（Blue）三种原色组合表示。如果每种原色分配一个字节（取值 0~255），就可以得到超过 1600 万种颜色组合（*If one byte is assigned for each of the primary colors (red, green, and blue), we can get more than 16 million color combinations*）。
+
+## 二、数据编码
+
+电脑只能存 0 和 1，要把文字存进去，就得先给每个字符编一个"号码"，这就是字符编码。最基础的两种是 ASCII 和 Unicode。
+
+**ASCII 编码**（American Standard Code for Information Interchange，美国信息交换标准代码）：最基础的字符编码，用 **7 位二进制**表示 **128 个字符**（取值 0~127），包含大小写字母、数字、常见标点和控制字符。例如大写字母 `A` 对应十进制 65（二进制 `01000001`），小写字母 `a` 对应 97，数字字符 `0` 对应 48。ASCII 只覆盖英文字符，无法表示中文等其它文字。
+
+**Unicode 编码**：为了突破 ASCII 只能表示英文的局限，Unicode 为世界上几乎所有文字（中文、日文、韩文、emoji 等）的每个字符分配一个唯一的**码点（Code Point）**。它本身是一张"字符 ↔ 编号"的对照表，具体落盘存储时还要配合 UTF-8、UTF-16 等编码方案：
+
+- **UTF-8**：变长编码，完全兼容 ASCII，英文字符占 1 字节、中文通常占 3 字节，是 Web 和 Linux 上最常用的编码。
+- **UTF-16**：以 2 字节为主（变长）的编码，Windows 系统内部常使用。
+
+网络安全里经常要处理各种编码之间的转换（比如把十六进制、Base64、URL 编码还原成明文），先理解 ASCII 和 Unicode 是打底的一步。
+
+## 三、Python 简单代码
+
+这个房间里，我们探讨了命令式编程语言的三个关键支柱（*In this room, we covered three key pillars in imperative programming languages*）：
+
+- **变量（Variables）**
+- **条件语句（Conditionals with `if` and `else`）**
+- **循环（Loops with `while`）**
+
+下面是一个"猜数字"小游戏的完整示例，同时用到了上面三个支柱：
+
+```python
+# Repeat until the user guesses the secret number.
+while guess != secret:
+    text = input("Take a guess: ")  # input() returns text (a string)
+    guess = int(text)  # convert the text to a number
+    
+    tries = tries + 1  # add 1 try
+
+    # Give a hint using if / elif / else.
+    if guess < 1 or guess > 20:
+        print("That number is out of range. Try again.")
+    elif guess < secret:
+        print("Too low, try again.")
+    elif guess > secret:
+        print("Too high, try again.")
+    else:
+        print("You got it in", tries, "tries!")
+```
+
+> 注：这段代码省略了开头对 `secret`、`guess`、`tries` 的初始化。完整运行需要在前面加上 `import random`、`secret = random.randint(1, 20)`、`guess = 0`、`tries = 0`，开头再打印一句提示语。
+
+## 四、JavaScript 简单代码
+
+同样的，这个房间里也用 JavaScript 练习了命令式编程的三个关键支柱：
+
+- **变量（Variables）**
+- **条件语句（Conditionals with `if` and `else`）**
+- **循环（Loops with `while`）**
+
+下面是和上面 Python 版本功能一致的"猜数字"游戏（Node.js 环境）：
+
+```javascript
+import * as readline from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
+
+const rl = readline.createInterface({ input, output });
+
+try {
+    const secret =
+        Math.floor(Math.random() * (20)) + 1; // 1 <= secret <= 20
+    let tries = 0;
+    let guess = 0; // start with a value that cannot be the secret (since secret is 1..20)
+
+    console.log("I'm thinking of a number between 1 and 20");
+
+    // Repeat until the user guesses the secret number.
+    while (guess !== secret) {
+        const text = await rl.question("Take a guess: "); // rl.question() returns text (a string)
+        guess = parseInt(text, 10); // convert the text to a number
+
+        tries = tries + 1; // add 1 try
+
+        // Give a hint using if / else if / else.
+        if (guess < 1 || guess > 20) {
+            console.log("That number is out of range. Try again.");
+        } else if (guess < secret) {
+            console.log("Too low, try again.");
+        } else if (guess > secret) {
+            console.log("Too high, try again.");
+        } else {
+            console.log("You got it in", tries, "tries!");
+        }
+    }
+} finally {
+    rl.close();
+}
+```
+
+对比两个版本：Python 用**缩进**组织代码块，JavaScript 用**花括号 `{}`**；Python 的 `if`/`while` 后面不需要括号，JavaScript 需要；两者都用 `while` 实现循环、用 `if`/`elif`（JavaScript 为 `else if`）/`else` 做分支判断。
+
+## 五、SQL 基础知识
+
+计算机把信息存储在**数据库**中，SQL（Structured Query Language，结构化查询语言）就是用来向数据库"提问"的语言。以咖啡馆的订单为例：数据被组织成**表**，表由**行**和**列**构成，简单的 SQL 命令就能显示、筛选、排序和添加数据（*In this room, we learned how computers store information in databases and how SQL is used to ask clear questions about that information. Using a café example, we saw how tables organise orders into rows and columns, and how simple SQL commands can show, filter, sort, and add data*）。
+
+**学到的技能（Skills Learned）：**
+
+- 了解什么是数据库（*Understanding what a database is*）
+- 了解什么是表、行和列（*Knowing what tables, rows, and columns are*）
+- 使用 SQL 提出简单问题（*Asking simple questions using SQL*）
+- 读取数据库返回的结果（*Reading results returned by a database*）
+
+**本房间学习的 SQL 查询（SQL Queries Learned in This Room）：**
+
+| 关键字 | 作用 |
+|--------|------|
+| `SELECT` | 选择要显示的数据（*choose what data to display*） |
+| `FROM` | 指定数据来自哪张表（*choose where the data comes from*） |
+| `WHERE` | 根据条件筛选记录（*filter records based on a condition*） |
+| `ORDER BY` | 对结果排序（*sort results*） |
