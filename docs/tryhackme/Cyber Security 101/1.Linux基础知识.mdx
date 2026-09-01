@@ -1,0 +1,176 @@
+---
+title: 1. Linux 基础知识
+sidebar_position: 1
+---
+
+# Linux 基础知识
+
+本篇是 TryHackMe Cyber Security 101 学习路径的第一篇笔记。作为网络安全学习者，Linux 几乎是必学的第一课——互联网上绝大多数服务器、网络设备、Android 手机跑的都是它，渗透测试的攻击机（如 Kali）更是清一色 Linux。这一篇把 Linux 的命令行基础、文件系统、权限、进程管理过一遍。
+
+## 一、运行你的第一批命令
+
+**Linux** 是一个开源的**操作系统内核（Kernel）**（*the kernel at the core of Linux*），因为开源、免费、稳定，被广泛用于服务器、网络设备、嵌入式系统。和 Windows 主要靠鼠标点击不同，Linux 的核心操作方式是打开 **终端（Terminal）**，在 **命令行（Command Line）** 里敲命令——终端是一个接收命令的界面，你输入一条命令、按回车，系统就执行并返回结果。
+
+命令的基本格式是：`命令名 [选项] [参数]`。先认识两个最简单的命令：
+
+- **echo**：把传给它的文本打印到屏幕上。例如 `echo hello` 会输出 `hello`（*The echo command prints out whatever you provide as an argument*）。
+- **whoami**：打印当前登录的用户名（*prints the name of the user currently logged in*）。刚进系统时通常是 `root` 或你自己的用户名。
+
+## 二、与文件系统交互
+
+Linux 里"一切皆文件"——连硬件设备都表现为文件。要在 Linux 里生存，先学会在文件系统里"走位"和增删改查：
+
+| 命令 | 作用 | 示例 |
+|------|------|------|
+| pwd | Print Working Directory，打印当前所在目录的完整路径 | `pwd` |
+| ls | List，列出当前目录内容；`ls -la` 以长格式列出**所有**文件（含隐藏文件，以 `.` 开头） | `ls -la` |
+| cd | Change Directory，切换目录；`cd ..` 返回上一级，`cd ~` 回到当前用户主目录 | `cd /home` |
+| cat | Concatenate，把文件内容打印到屏幕上 | `cat note.txt` |
+| touch | 创建新的空文件 | `touch newfile` |
+| mkdir | Make Directory，创建新目录；`mkdir -p` 可一次创建多级目录 | `mkdir -p a/b/c` |
+| cp | Copy，复制文件；复制目录要加 `-r` | `cp a.txt b.txt` |
+| mv | Move，移动文件（也可用来重命名） | `mv a.txt /home/b.txt` |
+| rm | Remove，删除文件；`rm -r` 删目录、`rm -f` 强制删除 | `rm note.txt` |
+| file | 查看文件的实际类型（即使没有扩展名也能识别出来） | `file flag` |
+
+## 三、搜索文件
+
+系统里文件成千上万，靠眼睛翻不现实。两个最常用的搜索命令：
+
+- **grep**：在**文件内容**里搜索文本。`grep "password" file.txt` 会打印出文件中所有包含 `password` 的行（*searches through the contents of files for matching lines*）。它经常和管道 `|` 连用，把上一个命令的输出拿去过滤。
+- **find**：按文件名、路径等条件**查找文件**。`find / -name flag.txt` 从根目录开始找所有叫 `flag.txt` 的文件（*finds files with the given name*）。
+
+### 通配符（Wildcards）
+
+搜索匹配时可以借用两个"万能字符"：
+
+- `*`：匹配任意数量的任意字符，如 `*.txt` 匹配所有以 `.txt` 结尾的文件
+- `?`：匹配**一个**任意字符，如 `file?` 能匹配 `file1`、`filea`，但不匹配 `file10`
+
+## 四、Shell 运算符
+
+**Shell** 就是"接受你敲的命令、交给系统执行"的那个程序（如 Bash）。它能识别几个特殊符号，让你把命令组织得更聪明：
+
+| 运算符 | 含义 |
+|--------|------|
+| `&` | 让命令在后台运行，不阻塞当前终端 |
+| `&&` | 只有前一条命令**成功**（退出码为 0），才执行后一条 |
+| `>` | 把命令输出重定向到文件（**覆盖**原文件） |
+| `>>` | 把命令输出重定向到文件（**追加**到文件末尾） |
+| `;` | 不管前一条成功与否，都执行后一条 |
+| `#` | 注释，`#` 后面的内容不会被执行 |
+
+> 注：`>` 会覆盖文件原内容，`>>` 才会追加。写脚本时别用混了，否则容易把日志或配置清空。
+
+## 五、用 SSH 远程登录
+
+生产环境的 Linux 服务器大多在遥远的机房，你不可能真的坐过去敲键盘。**SSH（Secure Shell，安全外壳协议）** 就是用来安全地远程登录 Linux 的加密协议（*SSH allows you to remotely access a machine over a secure, encrypted connection*）。
+
+登录命令格式：
+
+```
+ssh 用户名@主机IP或域名
+```
+
+例如 `ssh user@10.10.10.10`，按提示输入密码即可进入远程终端。SSH 默认使用 22 端口。TryHackMe 的 Linux 靶机启动后，你可以在自己电脑上或攻击机里用 SSH 连进去练习。除了密码，还可以用 **SSH 密钥（Key Pair）** 免密登录——公钥放在服务器上，私钥留在本地。
+
+## 六、文本编辑器：nano 与 vim
+
+在命令行里改配置、写脚本，离不开终端文本编辑器。最常用的是 **nano** 和 **vim**。
+
+### 1. nano
+
+- 启动：`nano 文件名`（文件不存在就新建）
+- 编辑：直接打字即可
+- 保存退出：`Ctrl + X`，按提示输入 `Y` 确认保存，再回车确认文件名
+
+nano 界面底部常驻一行快捷键提示，对新手最友好。
+
+### 2. vim
+
+**vim** 功能更强但学习曲线陡——它有**普通模式（Normal）** 和**插入模式（Insert）** 之分：按 `i` 进入插入模式打字，按 `Esc` 回到普通模式，普通模式下输入 `:wq` 保存并退出（*w=write 保存，q=quit 退出*）。在终端敲 `vimtutor` 可以进入内置教程。
+
+## 七、文件权限 101
+
+Linux 是多用户系统，每个文件都规定了"谁能读、谁能写、谁能执行"。
+
+用 `ls -l` 看到的权限长这样：
+
+```
+-rw-r--r-- 1 user user 1048576 Sep 1 12:00 notes.txt
+```
+
+从左侧拆解这串字符：
+
+- 第 1 个字符：文件类型。`-` 表示普通文件，`d` 表示目录（directory），`l` 表示符号链接
+- 后 9 个字符分三组，分别代表**所有者（owner）**、**组（group）**、**其他人（others）**的权限：
+  - `r`：可读（read）
+  - `w`：可写（write）
+  - `x`：可执行（execute）
+- `-` 表示没有该项权限
+
+例如 `rwxr-xr--` 意思是：所有者可读写执行，组内成员可读可执行，其他人只能读。
+
+修改权限用 **chmod（change mode）**：
+
+- 符号方式：`chmod +x script.sh` 给所有用户加上执行权限
+- 数字方式：`r=4`、`w=2`、`x=1`，三者相加。`chmod 755 file` 表示所有者 `7(4+2+1)`、组 `5(4+1)`、其他人 `5`
+
+修改文件所有者用 **chown（change owner）**，如 `sudo chown root file.txt`。
+
+## 八、常见目录一览
+
+Linux 遵循 **FHS（Filesystem Hierarchy Standard，文件系统层级标准）**，不同用途的文件放在约定好的目录里。新手先认识这几个：
+
+| 目录 | 用途 |
+|------|------|
+| `/etc` | 系统与软件的配置文件（configuration files） |
+| `/var` | 变化频繁的数据，尤其是日志（如 `/var/log`） |
+| `/root` | root 用户（超级管理员）的主目录 |
+| `/tmp` | 临时文件，重启后通常会被清空 |
+| `/home` | 普通用户的个人主目录，每个用户一个子目录 |
+| `/opt` | 可选软件（optional software）的安装位置 |
+
+## 九、常用命令速查
+
+除了前面用过的，这些命令在 Linux 环境下几乎天天见：
+
+| 命令 | 作用 |
+|------|------|
+| man | 查看命令的手册：`man ls` 显示 ls 的完整说明 |
+| id | 查看当前用户 ID、所属组等信息 |
+| uname | 查看系统信息：`uname -a` 显示内核版本等 |
+| hostname | 查看主机名 |
+| groups | 查看当前用户所在的用户组 |
+| history | 查看输入过的历史命令 |
+
+## 十、进程管理 101
+
+**进程（Process）** 就是正在运行的程序。Linux 里每个进程都有一个 **PID（Process ID，进程号）**，靠它来定位和操控进程：
+
+| 命令 | 作用 |
+|------|------|
+| ps | 快照式查看当前进程；`ps aux` 查看所有用户的所有进程 |
+| top | 实时动态显示进程与资源占用（CPU、内存），按 `q` 退出 |
+| kill | 结束进程：`kill 进程号`；`kill -9` 强制杀死 |
+| systemctl | 管理系统服务（systemd）：`systemctl start/stop/status/restart 服务名`，`enable` 设置开机自启 |
+
+## 十一、通用网络工具
+
+在服务器上（或渗透测试时）经常要下载文件、请求网页，两个命令行工具必须会：
+
+- **wget**：从网络下载文件。`wget https://example.com/file.zip` 会把它保存到当前目录（*downloads files from the internet*）。
+- **curl**：向 URL 发起请求并显示响应内容。`curl https://example.com` 会把网页源码打印到屏幕；`curl -o file` 把内容存成文件。
+
+> 注：渗透测试里 `curl` 常用来自定义请求头、请求方法去探测 Web 服务，配合 `-X POST`、`-d "data"` 等参数使用。
+
+## 十二、系统维护
+
+Linux 的软件靠**包管理器**统一安装升级。Debian/Ubuntu 系列用的是 **APT（Advanced Package Tool）**：
+
+- `sudo apt update`：更新软件源索引
+- `sudo apt upgrade`：升级所有可升级的软件包
+- `sudo apt install 包名`：安装软件
+- `sudo apt remove 包名`：卸载软件
+
+系统运行日志记录在 `/var/log/` 下（如 `/var/log/syslog`、`/var/log/auth.log`），排查故障、调查入侵时是重要的第一手资料。

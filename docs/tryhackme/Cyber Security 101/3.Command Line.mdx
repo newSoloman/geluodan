@@ -1,0 +1,155 @@
+---
+title: 3. Command Line（命令行）
+sidebar_position: 3
+---
+
+# Command Line（命令行）
+
+本篇是 TryHackMe Cyber Security 101 学习路径的第三篇笔记。前半部分整理 Windows 命令行（CMD）里访问联网系统最实用的命令，后半部分介绍功能更强大的 PowerShell——它既是命令行 Shell，又是一门完整的脚本语言，是现代 Windows 运维与攻击/防御的必备工具。
+
+## 一、Windows 命令行
+
+### 1. 基本系统信息
+
+三个命令快速了解这台机器"是谁、什么系统、什么环境"：
+
+| 命令 | 作用 |
+|------|------|
+| `set` | 显示当前所有的**环境变量**（Path、用户名、系统目录等） |
+| `ver` | 显示 Windows 的版本号 |
+| `systeminfo` | 显示详细的系统配置信息（操作系统、内存、网卡、已装补丁等） |
+
+### 2. 网络故障排除
+
+| 命令 | 作用 |
+|------|------|
+| `ipconfig /all` | 显示完整的网络配置：IP、子网掩码、默认网关、DNS、MAC 地址等（比不带参数的 `ipconfig` 详细得多） |
+| `ping` | 测试与目标主机是否可达，如 `ping 8.8.8.8`，观察丢包和延迟 |
+| `tracert` | 追踪数据包到达目标所经过的路径，`tracert 域名` 会逐跳显示每一台路由器 |
+
+> 注：这是排查"网不通"的经典三步——`ipconfig /all` 看自己配置对不对 → `ping` 网关或公网看通不通 → `tracert` 定位在哪一跳断了。
+
+### 3. 文件和磁盘管理
+
+| 命令 | 作用 |
+|------|------|
+| `cd` | 切换目录 |
+| `dir` | 列出当前目录内容 |
+| `mkdir` | 创建目录 |
+| `type` | 查看文本文件内容 |
+| `copy` / `xcopy` | 复制文件 / 复制目录 |
+| `move` | 移动文件 |
+| `del` | 删除文件 |
+| `ren` | 重命名文件 |
+| `chkdsk` | 检查文件系统和磁盘卷是否存在错误和坏扇区 |
+| `net use` | 映射网络驱动器、连接共享 |
+
+### 4. 任务和进程管理
+
+| 命令 | 作用 |
+|------|------|
+| `tasklist` | 列出当前所有正在运行的进程（可配合 `/svc` 查看进程对应的服务） |
+| `taskkill` | 结束进程，如 `taskkill /PID 1234 /F` 强制结束 |
+| `netstat -ano` | 查看当前网络连接与监听端口（`-ano` 会显示对应的进程 PID） |
+| `whoami` | 显示当前用户名 |
+| `hostname` | 显示主机名 |
+| `sc query` | 查询系统服务状态 |
+| `shutdown` | 关机 / 重启 |
+
+### 5. 两个通用技巧
+
+记住前面任务中介绍的所有命令非常重要；此外，同样重要的是要知道 **`/?` 可以帮助**：`/?` 可以与大多数命令一起使用，显示该命令的帮助页面（*you can use /? with most commands to display a help page*）。
+
+在这个房间里，我们还以两种方式使用 **`more`** 命令（*In this room, we used the command more in two ways*）：
+
+- 显示文本文件：`more file.txt`
+- 将长篇输出通过管道逐页查看：`some_command | more`
+
+这个房间里，我们重点学习了通过命令行访问联网系统的最实用命令。我们特意省略了一些常用命令，因为我们认为在入门教程中包含它们并没有实际意义。我们在下面列出这些命令，是为了让你了解命令行还可以用于其他任务（*We intentionally omitted a few common commands as we didn't see a real value for including them in a beginner room*）：
+
+| 命令 | 作用 |
+|------|------|
+| `chkdsk` | 检查文件系统和磁盘卷是否存在错误和坏扇区 |
+| `driverquery` | 显示已安装的设备驱动程序列表 |
+| `sfc /scannow` | 扫描系统文件是否存在损坏，如果可能则修复它们 |
+
+## 二、Windows PowerShell
+
+### 1. 什么是 PowerShell？
+
+**PowerShell** 是微软推出的一种**命令行 Shell 加脚本语言**（*a command-line shell and scripting language*），构建在 .NET 框架之上。与老式 CMD 最大的区别在于：
+
+- **一切皆对象**：CMD 里命令输出的是"文本"，而 PowerShell 输出的是结构化的**对象（Objects）**，可以进一步筛选、排序、运算
+- **cmdlet**：PowerShell 的命令叫 cmdlet，命名统一是 **"动词-名词"** 格式，如 `Get-Process`、`Set-Content`
+- **脚本化**：可以写成 `.ps1` 脚本文件，实现复杂的自动化任务
+
+### 2. PowerShell 基础知识
+
+| 命令 / 概念 | 说明 |
+|-------------|------|
+| `Get-Help` | 查看命令帮助（相当于 CMD 的 `/?`），如 `Get-Help Get-Process` |
+| `Get-Command` | 列出所有可用的命令 |
+| 动词-名词命名 | `Get`（获取）、`Set`（设置）、`New`（新建）、`Remove`（删除）、`Start`（启动）等动词加名词 |
+| `$_` | 管道中"当前对象"的占位符 |
+| 别名（Alias） | 部分命令有短别名，如 `dir` 就是 `Get-ChildItem` 的别名 |
+
+### 3. 浏览文件系统和使用文件
+
+| 命令 | 说明 |
+|------|------|
+| `Get-Location` | 显示当前目录（类似 `pwd`） |
+| `Set-Location` | 切换目录（类似 `cd`） |
+| `Get-ChildItem` | 列出目录内容（类似 `ls` / `dir`），加 `-Recurse` 递归 |
+| `Get-Content` | 读取文件内容（类似 `cat` / `type`） |
+| `Copy-Item` / `Move-Item` / `Remove-Item` | 复制 / 移动 / 删除文件 |
+| `Set-Content` | 向文件写入内容 |
+
+### 4. 数据管道、过滤和排序
+
+管道符 `|` 把上一个命令输出的对象传给下一个命令继续处理（*piping sends the output of one cmdlet to the next*）：
+
+```
+Get-Process | Sort-Object CPU -Descending | Select-Object -First 5
+```
+
+- **Where-Object**：按条件过滤，如 `Get-Process | Where-Object {$_.Name -like "*chrome*"}`
+- **Select-Object**：挑选需要的属性或前 N 条
+- **Sort-Object**：排序，加 `-Descending` 降序
+- **比较运算符**：`-eq`（等于）、`-ne`（不等于）、`-gt`（大于）、`-lt`（小于）、`-like`（模糊匹配）
+
+### 5. 系统和网络信息
+
+| 命令 | 说明 |
+|------|------|
+| `Get-Process` | 查看进程 |
+| `Get-Service` | 查看系统服务及状态 |
+| `Get-NetIPAddress` | 查看 IP 地址配置 |
+| `Get-NetTCPConnection` | 查看 TCP 连接与监听端口 |
+| `Test-NetConnection` | 测试网络连通性（类似增强版 `ping`） |
+| `Get-ComputerInfo` | 查看系统软硬件详细信息 |
+
+### 6. 实时系统分析
+
+- **Get-Counter**：读取**性能计数器（Performance Counters）**，实时监控 CPU、内存等指标，如 `Get-Counter '\Processor(_Total)\% Processor Time'`
+- **Get-WinEvent / Get-EventLog**：读取 Windows 事件日志，是排查故障、安全审计（蓝队查入侵痕迹）的重要来源
+
+### 7. PowerShell 脚本编写
+
+把命令序列存成 `.ps1` 文件就是脚本。常用语法：
+
+- **变量**：`$name = "value"`，变量名以 `$` 开头
+- **条件**：`if (...) { ... } else { ... }`
+- **循环**：`foreach ($item in $items) { ... }`
+- **函数**：`function 名称 { ... }`
+- **执行策略（Execution Policy）**：PowerShell 默认禁止直接运行脚本文件，需要先允许：`Set-ExecutionPolicy RemoteSigned`（*PowerShell has an execution policy that prevents running scripts by default*）
+
+一个简单的示例——循环测试几台服务器是否可达：
+
+```powershell
+# 定义一组主机名，逐个测试连通性
+$hosts = "dc01", "web01", "db01"
+foreach ($h in $hosts) {
+    $result = Test-NetConnection $h
+    Write-Host "$h 可达：$($result.PingSucceeded)"
+}
+```
