@@ -153,3 +153,96 @@ foreach ($h in $hosts) {
     Write-Host "$h 可达：$($result.PingSucceeded)"
 }
 ```
+
+
+## 三、Linux Shell
+
+前两节都在讲 Windows 的命令行，这一节把视角切到 Linux。**Shell（壳）** 是介于用户和操作系统内核（Kernel）之间的"外壳"程序：读取你输入的命令、解释执行、把结果返回给你（*A shell is a program that acts as an interface between the user and the operating system*）。我们平时说的"敲命令"，敲进去的地方就是 Shell。更系统的 Linux 命令可回看本路径第一篇《Linux 基础知识》。
+
+### 1. 常见的 Shell 变体
+
+Linux 上的 Shell 不止一个，常见的有：
+
+| Shell | 名称 | 特点 |
+|-------|------|------|
+| sh | Bourne Shell | 最古老的 Shell，Unix 系统的标准，脚本兼容性最好 |
+| bash | Bourne Again Shell | sh 的增强版，**大多数 Linux 发行版的默认 Shell**，功能更完善 |
+| zsh | Z Shell | 功能丰富：更强的自动补全、通配符、主题与插件（如 oh-my-zsh） |
+| fish | Friendly Interactive Shell | 开箱即用、对新手友好：自动补全建议、彩色高亮、语法错误提示 |
+
+### 2. 查看当前 Shell 与切换
+
+想知道现在用的哪个 Shell：
+
+- **`echo $SHELL`**：打印当前登录用户默认 Shell 的路径，如 `/bin/bash`
+- **`ps -p $$`**：查看当前实际运行的 Shell 进程
+
+永久切换默认 Shell 用 `chsh -s /bin/zsh`（重新登录后生效）；临时切换直接输入名字即可，如输入 `zsh` 进入 zsh，输入 `exit` 退出。
+
+### 3. 环境变量
+
+**环境变量（Environment Variables）** 是 Shell 提供给程序和脚本的一组"全局配置"，比如 `PATH` 告诉系统去哪些目录找命令。几个常用操作：
+
+| 命令 | 作用 |
+|------|------|
+| `echo $PATH` | 查看 PATH 变量（命令搜索路径） |
+| `env` | 列出当前所有环境变量 |
+| `export 名称=值` | 设置并导出环境变量，如 `export EDITOR=vim` |
+| `echo $HOME` | 查看当前用户主目录 |
+
+环境变量写进 Shell 配置文件后可以永久生效。
+
+### 4. 配置文件与提示符
+
+每个 Shell 启动时会读取自己的配置文件，用来加载别名、环境变量、提示符等设置：
+
+- **bash**：`~/.bashrc`（交互式 Shell）与 `~/.bash_profile`
+- **zsh**：`~/.zshrc`
+
+修改完配置后用 `source ~/.bashrc`（或 `source ~/.zshrc`）立即生效，不必重新登录。
+
+**提示符（Prompt）** 是命令左边那串字，由 **`PS1`** 变量控制，默认形如 `user@host:~$`。可以自定义，例如显示带颜色和当前目录的提示符：
+
+```bash
+PS1='\u@\h:\w\$ '   # \u 用户名 \h 主机名 \w 当前目录 \$ 用户/root 符号
+```
+
+### 5. 别名（Alias）
+
+**别名（Alias）** 给长命令起个短名字。临时生效：
+
+```
+alias ll='ls -al'
+```
+
+想永久生效，把 `alias` 命令写进 `~/.bashrc`（或 `~/.zshrc`）再 `source` 一下。`unalias ll` 取消别名，单独敲 `alias` 可以列出当前所有别名。
+
+### 6. 命令历史
+
+Shell 会记住你敲过的命令，用 **`history`** 查看；键盘**上下方向键**翻看历史输入，`Ctrl + R` 反向搜索历史。
+
+### 7. 编写 Shell 脚本
+
+把一串命令存成文件、加上执行权限，就是一个 Shell 脚本。最小结构：
+
+```bash
+#!/bin/bash           # shebang：声明用哪个解释器执行
+echo "hello shell"
+```
+
+- **shebang**：文件第一行的 `#!/bin/bash`，告诉系统用 bash 解释这个脚本
+- **执行**：先 `chmod +x script.sh` 加执行权限，再 `./script.sh` 运行
+- **参数**：`$1`、`$2` 表示第 1、2 个传入参数，`$#` 表示参数个数
+- **变量**：`name="value"` 定义，`$name` 引用
+- **条件**：`if [ -f file ]; then ...; fi`（`-f` 判断文件是否存在）
+- **循环**：`for i in 1 2 3; do echo $i; done`
+
+一个完整的例子——遍历并输出传入的每个参数：
+
+```bash
+#!/bin/bash
+# 输出传入的每个参数
+for arg in "$@"; do
+    echo "参数：$arg"
+done
+```
