@@ -4,381 +4,110 @@
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - var(--ifm-navbar-height));
-  background: linear-gradient(165deg, #1e1e2e 0%, #181825 25%, #16161f 50%, #11111b 100%);
-  gap: 2.5rem;
-  padding: 2rem 1rem;
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
+  padding: 3rem 1rem;
+  gap: 3rem;
 }
 
-/* ===== 装饰光圈 ===== */
+/* ===== 头部 ===== */
 
-.page::before {
-  content: '';
-  position: absolute;
-  top: -200px;
-  right: -100px;
-  width: 550px;
-  height: 550px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(180, 190, 254, 0.1) 0%, transparent 70%);
-  filter: blur(80px);
-  pointer-events: none;
-  z-index: 0;
-  animation: orbDrift 12s ease-in-out infinite;
+.hero {
+  text-align: center;
 }
 
-.page::after {
-  content: '';
-  position: absolute;
-  bottom: -220px;
-  left: -120px;
-  width: 500px;
-  height: 500px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(245, 194, 231, 0.08) 0%, transparent 70%);
-  filter: blur(70px);
-  pointer-events: none;
-  z-index: 0;
-  animation: orbDrift 14s ease-in-out infinite reverse;
-}
-
-@keyframes orbDrift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -20px) scale(1.05); }
-  66% { transform: translate(-20px, 15px) scale(0.95); }
-}
-
-/* ===== 噪点纹理 ===== */
-
-.noise {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.04;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* ===== 格言 ===== */
-
-.motto {
-  font-family: 'Ma Shan Zheng', serif;
-  font-size: 1.8rem;
-  letter-spacing: 0.2em;
-  margin: 0 0 0.5rem;
-  background: linear-gradient(135deg, #f9e2af, #fab387, #f5c2e7, #b4befe, #f9e2af);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 12px rgba(180, 190, 254, 0.4));
-  position: relative;
-  z-index: 2;
-  animation: shimmer 4s linear infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 0% center; }
-  100% { background-position: 200% center; }
-}
-
-/* ===== 终端 ===== */
-
-.terminal {
-  background: rgba(30, 30, 46, 0.5);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(180, 190, 254, 0.15);
-  border-radius: 16px;
-  padding: 2rem 2.5rem;
-  font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
-  font-size: 1.05rem;
-  line-height: 1.8;
-  color: #cdd6f4;
-  min-width: 460px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    0 2px 8px rgba(180, 190, 254, 0.04),
-    inset 0 1px 0 rgba(180, 190, 254, 0.04);
-  position: relative;
-  z-index: 2;
-}
-
-.block {
-  margin-bottom: 1rem;
-}
-
-.line {
-  display: flex;
-}
-
-.prompt {
-  color: #89b4fa;
-  white-space: nowrap;
-}
-
-.cmd {
-  color: #a6e3a1;
-}
-
-.output {
-  color: #a6adc8;
-  padding-left: 0.5rem;
-}
-
-.cursor {
-  color: #b4befe;
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-/* ===== Bento 网格 ===== */
-
-.bento {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  max-width: 860px;
-  width: 100%;
-  position: relative;
-  z-index: 2;
-}
-
-/* --- 统计卡片：独占一行，排在最下面 --- */
-.statCell {
-  grid-column: 1 / -1;
-}
-
-/* ===== Bento 卡片通用 ===== */
-
-.bentoCard {
-  position: relative;
-  overflow: hidden;
-  background: rgba(30, 30, 46, 0.55);
-  border: 1px solid rgba(180, 190, 254, 0.1);
-  border-radius: 16px;
-  transition:
-    border-color 0.35s ease,
-    box-shadow 0.35s ease,
-    transform 0.35s ease;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(180, 190, 254, 0.03);
-  text-decoration: none !important;
-  color: #cdd6f4;
-}
-
-.bentoCard:hover {
-  border-color: rgba(180, 190, 254, 0.3);
-  box-shadow:
-    0 0 28px rgba(180, 190, 254, 0.12),
-    0 12px 40px rgba(0, 0, 0, 0.35);
-  transform: translateY(-2px);
-}
-
-/* 顶部微光装饰线 */
-.bentoCard::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 15%;
-  right: 15%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(180, 190, 254, 0.25), transparent);
-  transition: opacity 0.35s;
-  opacity: 0.5;
-}
-
-.bentoCard:hover::after {
-  opacity: 1;
-}
-
-/* ===== 平台卡片 ===== */
-
-.platformCard {
-  display: flex;
-  flex-direction: column;
-  min-height: 110px;
-}
-
-/* 悬停光晕层 */
-.cardGlow {
-  position: absolute;
-  inset: -1px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(180, 190, 254, 0.06), transparent 60%, rgba(245, 194, 231, 0.04));
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.platformCard:hover .cardGlow {
-  opacity: 1;
-}
-
-.cardContent {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  padding: 1.25rem 1.25rem 0.9rem;
-}
-
-.cardTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.25rem;
-}
-
-.cardTitle {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #cdd6f4;
+.title {
+  margin: 0 0 0.75rem;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1a1a1a;
   letter-spacing: 0.02em;
 }
 
-.cardCount {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
+.subtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #8a8a8a;
 }
 
-.countNum {
-  font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+/* ===== 平台入口网格 ===== */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  width: 100%;
+  max-width: 720px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.5rem 1.4rem;
+  background: #ffffff;
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  text-decoration: none !important;
+  color: #1a1a1a;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.card:hover {
+  border-color: #1a1a1a;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.cardName {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #a6e3a1;
-}
-
-.countLabel {
-  font-size: 0.7rem;
-  color: #6c7086;
 }
 
 .cardDesc {
-  margin: 0;
-  font-size: 0.78rem;
-  color: #6c7086;
-  flex: 1;
+  font-size: 0.85rem;
+  color: #8a8a8a;
 }
 
-.cardArrow {
-  align-self: flex-end;
-  font-size: 0.9rem;
-  color: #585b70;
-  transition: color 0.3s, transform 0.3s;
-  margin-top: 0.25rem;
+.cardCount {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: #8a8a8a;
 }
 
-.platformCard:hover .cardArrow {
-  color: #b4befe;
-  transform: translateX(4px);
-}
-
-/* ===== 统计卡片 ===== */
-
-.statInner {
-  padding: 1.25rem 1.5rem 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.statHeader {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  margin-bottom: 0.75rem;
-}
-
-.statIcon {
-  font-size: 1.2rem;
-}
-
-.statTotal {
-  font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: #b4befe;
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.statUnit {
-  font-size: 0.9rem;
-  color: #a6adc8;
-}
-
-/* 图例 */
-.statLegend {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.statLegendItem {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.78rem;
-  color: #a6adc8;
-}
-
-.statLegendItem strong {
-  color: #cdd6f4;
+.cardCount strong {
+  color: #1a1a1a;
   font-weight: 600;
+}
+
+/* ===== 底部统计 ===== */
+
+.total {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #b0b0b0;
 }
 
 /* ===== 响应式 ===== */
 
-@media screen and (max-width: 800px) {
-  .bento {
+@media screen and (max-width: 700px) {
+  .grid {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto;
   }
 
-  .statCell {
-    grid-column: 1 / -1;
-    grid-row: auto;
-    order: -1;
+  .page {
+    gap: 2.5rem;
   }
-
 }
 
-@media screen and (max-width: 700px) {
-  .terminal {
-    min-width: auto;
-    padding: 1.25rem;
-    font-size: 0.85rem;
-  }
-
-  .bento {
+@media screen and (max-width: 460px) {
+  .grid {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
   }
 
-  .statCell {
-    grid-column: 1;
-  }
-
-  .platformCard {
-    min-height: auto;
-  }
-
-  .statInner {
-    padding: 1rem 1.1rem;
-  }
-
-  .statTotal {
+  .title {
     font-size: 1.8rem;
   }
 }

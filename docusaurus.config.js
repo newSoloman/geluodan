@@ -84,7 +84,8 @@ const config = {
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
       colorMode: {
-        defaultMode: 'dark',
+        defaultMode: 'light',
+        disableSwitch: true,
         respectPrefersColorScheme: false,
       },
       navbar: {
@@ -106,7 +107,7 @@ const config = {
         ],
       },
       footer: {
-        style: 'dark',
+        style: 'light',
         links: [
           {
             title: '靶机平台',
@@ -131,7 +132,6 @@ const config = {
       },
       prism: {
         theme: prismThemes.github,
-        darkTheme: prismThemes.dracula,
       },
     }),
 };
