@@ -34,7 +34,7 @@ module.exports = function articleCountPlugin(_context, _options) {
 
     async contentLoaded({ actions }) {
       const docsDir = path.join(_context.siteDir, 'docs');
-      const platforms = ['tryhackme', 'hackmyvm', 'mazesec', 'ulab'];
+      const platforms = ['tryhackme', 'hackmyvm', 'mazesec', 'ulab', '赤炼计划'];
 
       let total = 0;
       const perPlatform = {};

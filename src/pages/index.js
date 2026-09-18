@@ -8,6 +8,7 @@ const platformMeta = [
   { key: 'hackmyvm',  name: 'HackMyVM',  to: '/docs/hackmyvm',  desc: 'HackMyVM 靶机' },
   { key: 'mazesec',   name: 'MazeSec',   to: '/docs/mazesec',   desc: 'MazeSec 靶机' },
   { key: 'ulab',      name: 'Ulab',      to: '/docs/ulab',      desc: 'Ulab 靶机' },
+  { key: '赤炼计划',  name: '赤炼计划',  to: '/docs/赤炼计划',  desc: '赤炼计划' },
 ];
 
 export default function Home() {

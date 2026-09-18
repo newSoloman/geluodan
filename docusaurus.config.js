@@ -99,6 +99,7 @@ const config = {
           {to: '/docs/hackmyvm', label: 'HackMyVM', position: 'left'},
           {to: '/docs/mazesec', label: 'MazeSec', position: 'left'},
           {to: '/docs/ulab', label: 'Ulab', position: 'left'},
+          {to: '/docs/赤炼计划', label: '赤炼计划', position: 'left'},
           {to: '/docs/knowledge', label: '知识库', position: 'left'},
           {
             href: 'https://github.com/newSoloman/geluodan',
@@ -117,6 +118,7 @@ const config = {
               { label: 'HackMyVM', to: '/docs/hackmyvm' },
               { label: 'MazeSec', to: '/docs/mazesec' },
               { label: 'Ulab', to: '/docs/ulab' },
+              { label: '赤炼计划', to: '/docs/赤炼计划' },
               { label: '知识库', to: '/docs/knowledge' },
             ],
           },
