@@ -6,8 +6,6 @@ import styles from './index.module.css';
 const platformMeta = [
   { key: 'tryhackme', name: 'TryHackMe', to: '/docs/tryhackme', desc: 'TryHackMe 靶机' },
   { key: 'hackmyvm',  name: 'HackMyVM',  to: '/docs/hackmyvm',  desc: 'HackMyVM 靶机' },
-  { key: 'mazesec',   name: 'MazeSec',   to: '/docs/mazesec',   desc: 'MazeSec 靶机' },
-  { key: 'ulab',      name: 'Ulab',      to: '/docs/ulab',      desc: 'Ulab 靶机' },
 ];
 
 export default function Home() {
@@ -22,6 +20,8 @@ export default function Home() {
         <section className={styles.hero}>
           <h1 className={styles.title}>你好，我是 geluodan</h1>
           <p className={styles.subtitle}>记录网络安全靶机 Writeup</p>
+          <p className={styles.verse}>千淘万漉虽辛苦，吹尽狂沙始到金。</p>
+          <p className={styles.verseSource}>—— 刘禹锡《浪淘沙》</p>
         </section>
 
         <div className={styles.grid}>
