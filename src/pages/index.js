@@ -6,6 +6,7 @@ import styles from './index.module.css';
 const platformMeta = [
   { key: 'tryhackme', name: 'TryHackMe', to: '/docs/tryhackme', desc: 'TryHackMe 靶机' },
   { key: 'hackmyvm',  name: 'HackMyVM',  to: '/docs/hackmyvm',  desc: 'HackMyVM 靶机' },
+  { key: 'portswigger', name: 'PortSwigger', to: '/docs/portswigger', desc: 'PortSwigger 靶场' },
 ];
 
 export default function Home() {

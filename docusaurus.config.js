@@ -97,6 +97,7 @@ const config = {
         items: [
           {to: '/docs/tryhackme', label: 'Tryhackme', position: 'left'},
           {to: '/docs/hackmyvm', label: 'HackMyVM', position: 'left'},
+          {to: '/docs/portswigger', label: 'PortSwigger', position: 'left'},
           {to: '/docs/knowledge', label: '知识库', position: 'left'},
           {
             href: 'https://github.com/newSoloman/geluodan',
@@ -113,6 +114,7 @@ const config = {
             items: [
               { label: 'Tryhackme', to: '/docs/tryhackme' },
               { label: 'HackMyVM', to: '/docs/hackmyvm' },
+              { label: 'PortSwigger', to: '/docs/portswigger' },
               { label: '知识库', to: '/docs/knowledge' },
             ],
           },
